@@ -7,7 +7,6 @@ import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 
-import static com.econolyze.dev.util.UserManager.addAdmin;
 
 @QuarkusMain
 public class Main {
@@ -29,8 +28,8 @@ public class Main {
 
         private void addAdmin(String username, String password){
             User admin = new User();
-            admin.username = username;
-            admin.password = password;
+            admin.setUsername(username);
+            admin.setPassword(password);
             UserManager.addUser(admin);
             UserManager.addAdmin(admin.id);
         }
