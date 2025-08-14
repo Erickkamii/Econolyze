@@ -1,5 +1,6 @@
 package com.econolyze.dev.model;
 
+import com.econolyze.dev.util.StrongPassword;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.security.jpa.Password;
@@ -30,6 +31,7 @@ public class User extends PanacheEntity {
     @Email
     private String email;
     @Password
+//    @StrongPassword
     private String password;
     @Roles
     private String roles;

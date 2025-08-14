@@ -1,7 +1,15 @@
 package com.econolyze.dev.dto;
 
+import lombok.*;
+
+@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class RegisterRequestDTO {
-    private String username;
-    private String email;
-    private String password;
+    public String username;
+    public String email;
+    public String password;
+    public String roles;
 }

@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequestDTO {
     @NotBlank
-    private String username;
+    public String username;
     @NotBlank
-    private String password;
+    public String password;
 }
