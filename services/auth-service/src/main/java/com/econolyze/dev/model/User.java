@@ -31,7 +31,6 @@ public class User extends PanacheEntity {
     @Email
     private String email;
     @Password
-//    @StrongPassword
     private String password;
     @Roles
     private String roles;

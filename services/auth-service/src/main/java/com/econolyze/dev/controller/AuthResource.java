@@ -8,6 +8,7 @@ import com.econolyze.dev.service.UserManager;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -26,7 +27,7 @@ public class AuthResource {
     @POST
     @Path("/register")
     @PermitAll
-    public Response register(RegisterRequestDTO dto) {
+    public Response register(@Valid RegisterRequestDTO dto) {
         User user = new User();
         user.setUsername(dto.username);
         user.setEmail(dto.email);
