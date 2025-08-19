@@ -3,8 +3,7 @@ package com.econolyze.dev.dto;
 import lombok.*;
 
 @Data
-@Getter
-@Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginResponseDTO {

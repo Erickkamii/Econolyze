@@ -8,7 +8,6 @@ import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.core.Response;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Provider
 public class AuthExceptionHandler implements ExceptionMapper<ConstraintViolationException> {

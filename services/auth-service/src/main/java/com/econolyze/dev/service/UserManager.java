@@ -2,6 +2,7 @@ package com.econolyze.dev.service;
 
 import com.econolyze.dev.dto.LoginResponseDTO;
 import com.econolyze.dev.model.User;
+import com.econolyze.dev.model.UserRole;
 import com.econolyze.dev.util.TokenGenerator;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,29 +11,28 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Request;
 import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @ApplicationScoped
+@RequiredArgsConstructor
+@Slf4j
 public class UserManager {
 
-    static final String USERROLE = "USER";
-    static final String ADMINROLE = "ADMIN";
     static final String SEPARATOR = ",";
 
-    private final Request request;
+    @Inject
+    Request request;
 
     @Inject
     JsonWebToken jwt;
 
-    @Inject
-    public UserManager(Request request) {
-        this.request = request;
-    }
 
     @Transactional
     public static void addUser(User user) {
         if (!userExists(user.getUsername())) {
-            user.setRoles(USERROLE);
+            user.setRoles(UserRole.USER.getRole());
             user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
             user.persist();
         } else {
@@ -44,7 +44,7 @@ public class UserManager {
     public static void addAdmin(Long userId) {
         User user = User.findById(userId);
         if (user != null && userExists(user.getUsername())) {
-            addRole(user, ADMINROLE);
+            addRole(user, UserRole.ADMIN);
         }
     }
 
@@ -52,12 +52,13 @@ public class UserManager {
         return (User.count("username", username) > 0);
     }
 
-    private static void addRole(User user, String role) {
+    private static void addRole(User user, UserRole role) {
         String roles = user.getRoles();
+        String roleStr = role.getRole();
         if (roles == null || roles.isBlank()) {
-            user.setRoles(role);
-        } else if (!roles.contains(role)) {
-            user.setRoles(roles + SEPARATOR + role);
+            user.setRoles(roleStr);
+        } else if (!roles.contains(roleStr)) {
+            user.setRoles(roles + SEPARATOR + roleStr);
         }
     }
 
@@ -67,17 +68,17 @@ public class UserManager {
         if (user == null || !BcryptUtil.matches(rawPassword, user.getPassword())) {
             throw new IllegalArgumentException("Usuário ou senha inválidos");
         }
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-        loginResponseDTO.setUserId(user.id);
-        loginResponseDTO.setUsername(username);
-        loginResponseDTO.setRefreshToken(TokenGenerator.generateRefreshToken(username));
-        loginResponseDTO.setAuthToken(TokenGenerator.generate(user.getUsername(), user.getRoles()));
-        return loginResponseDTO;
+        return LoginResponseDTO.builder()
+                .userId(user.id)
+                .username(username)
+                .refreshToken(TokenGenerator.generateRefreshToken(username))
+                .authToken(TokenGenerator.generate(user.getUsername(),user.getRoles()))
+                .build();
     }
 
     public LoginResponseDTO refreshTokenFromJWT() {
         try {
-            // Verificar se é refresh token
+
             Object typeClaim = jwt.getClaim("type");
             if (!"refresh".equals(typeClaim)) {
                 throw new WebApplicationException("Tipo de token inválido", Response.Status.UNAUTHORIZED);
@@ -93,13 +94,12 @@ public class UserManager {
                 throw new WebApplicationException("Usuário não encontrado", Response.Status.UNAUTHORIZED);
             }
 
-            LoginResponseDTO response = new LoginResponseDTO();
-            response.setUsername(user.getUsername());
-            response.setUserId(user.id);
-            response.setAuthToken(TokenGenerator.generate(user.getUsername(), user.getRoles()));
-            response.setRefreshToken(TokenGenerator.generateRefreshToken(user.getUsername()));
-
-            return response;
+            return LoginResponseDTO.builder()
+                    .username(user.getUsername())
+                    .userId(user.id)
+                    .authToken(TokenGenerator.generate(user.getUsername(), user.getRoles()))
+                    .refreshToken(TokenGenerator.generateRefreshToken(user.getUsername()))
+                    .build();
         } catch (Exception e) {
             System.err.println("Erro no refresh: " + e.getMessage());
             throw new WebApplicationException("Falha ao validar token", Response.Status.UNAUTHORIZED);
