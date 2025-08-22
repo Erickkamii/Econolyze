@@ -1,30 +1,75 @@
+server:
+  port: 9999
+  forward-headers-strategy: none
+
 spring:
   cloud:
     gateway:
+      default-filters:
+        - AddResponseHeader=X-Frame-Options, DENY
+        - AddResponseHeader=X-Content-Type-Options, nosniff
+        - AddResponseHeader=X-XSS-Protection, 1; mode=block
+        - AddResponseHeader=Strict-Transport-Security, max-age=31536000; includeSubDomains
+        - AddResponseHeader=Cache-Control, no-cache, no-store, must-revalidate
+        - AddResponseHeader=Pragma, no-cache
+        - AddResponseHeader=Expires, 0
+
       routes:
         - id: auth-service
           uri: http://127.0.0.1:8081
           predicates:
-            - Path=/auth/**, /login, /register, /ping, /refresh
+            - Path=/login, /register, /ping
           filters:
             - PrefixPath=/auth
 
-#        - id: api-service
-#          uri: http://localhost:8082
-#          predicates:
-#            - Path=/api/**
-#          filters:
-#            - StripPrefix=1
-#
-#        - id: chatbot-service
-#          uri: http://localhost:8083
-#          predicates:
-#            - Path=/chatbot/**
-#          filters:
-#            - StripPrefix=1
+        - id: auth-service-protected
+          uri: http://127.0.0.1:8081
+          predicates:
+            - Path=/refresh
+          filters:
+            - PrefixPath=/auth
+
+        # Futuros serviços (comentados)
+        # - id: api-service
+        #   uri: http://127.0.0.1:8082
+        #   predicates:
+        #     - Path=/api/**
+        #   filters:
+        #     - StripPrefix=1
 
   security:
     oauth2:
       resourceserver:
         jwt:
           public-key-location: classpath:keys/publicKey.pem
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  info:
+    env:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Logs para auditoria
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    dev.econolyze: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/gateway.log
+
+spring.webflux.static-path-pattern: /static/**
