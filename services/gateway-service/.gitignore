@@ -3,6 +3,11 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+src/main/resources/keys/*.pem
+*.pem
+src/main/resources/keys/
+public-key.pem
+private-key.pem
 
 ### STS ###
 .apt_generated
