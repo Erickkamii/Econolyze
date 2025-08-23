@@ -25,24 +25,28 @@ public class CategoryService {
     @Inject
     ObjectMapper objectMapper;
 
-    public CategoryDTO addNewCategory(CategoryDTO categoryDTO) throws Exception {
-        Category category = objectMapper.convertValue(categoryDTO, Category.class);
-        if (categoryDontExists(categoryDTO.getName())){
-            categoryRepository.persist(category);
-        }
-        else{
-            throw new AlreadyExistsException("Category already exists");
-        }
-        return CategoryDTO.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .description(category.getDescription())
-                .color(category.getColor()).build();
+    public CategoryDTO addNewCategory(CategoryDTO categoryDTO) {
+            Category category = objectMapper.convertValue(categoryDTO, Category.class);
+            if (categoryDontExists(categoryDTO.getName())) {
+                categoryRepository.persist(category);
+            } else {
+                throw new AlreadyExistsException("Category already exists");
+            }
+            return CategoryDTO.builder()
+                    .id(category.getId())
+                    .name(category.getName())
+                    .description(category.getDescription())
+                    .color(category.getColor()).build();
     }
 
     public List<CategoryDTO> listAll(){
         List<Category> categories = categoryRepository.listAll();
-        return Collections.singletonList(objectMapper.convertValue(categories, CategoryDTO.class));
+        if (!categories.isEmpty()){
+            return objectMapper.convertValue(categories, objectMapper.getTypeFactory().constructCollectionType(List.class, CategoryDTO.class));
+        }
+        else{
+            return Collections.emptyList();
+        }
     }
 
     private boolean categoryDontExists(String name){

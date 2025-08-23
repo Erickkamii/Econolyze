@@ -17,13 +17,12 @@ public class CategoryResource {
     CategoryService categoryService;
 
     @GET
-    @Path("/all")
     public List<CategoryDTO> getAll() {
         return categoryService.listAll();
     }
 
     @POST
-    public CategoryDTO addCategory(CategoryDTO category) throws Exception {
+    public CategoryDTO addCategory(CategoryDTO category) {
         return categoryService.addNewCategory(category);
     }
 }
