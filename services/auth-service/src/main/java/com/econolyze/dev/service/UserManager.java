@@ -1,8 +1,8 @@
 package com.econolyze.dev.service;
 
 import com.econolyze.dev.dto.LoginResponseDTO;
-import com.econolyze.dev.model.User;
-import com.econolyze.dev.model.UserRole;
+import com.econolyze.dev.entity.User;
+import com.econolyze.dev.entity.UserRole;
 import com.econolyze.dev.util.TokenGenerator;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;

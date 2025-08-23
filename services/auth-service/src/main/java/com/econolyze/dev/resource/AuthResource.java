@@ -1,9 +1,9 @@
-package com.econolyze.dev.controller;
+package com.econolyze.dev.resource;
 
 import com.econolyze.dev.dto.LoginRequestDTO;
 import com.econolyze.dev.dto.LoginResponseDTO;
 import com.econolyze.dev.dto.RegisterRequestDTO;
-import com.econolyze.dev.model.User;
+import com.econolyze.dev.entity.User;
 import com.econolyze.dev.service.UserManager;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;

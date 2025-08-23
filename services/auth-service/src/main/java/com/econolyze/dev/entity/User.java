@@ -1,6 +1,5 @@
-package com.econolyze.dev.model;
+package com.econolyze.dev.entity;
 
-import com.econolyze.dev.util.StrongPassword;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.security.jpa.Password;

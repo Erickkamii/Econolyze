@@ -1,6 +1,6 @@
 package com.econolyze.dev;
 
-import com.econolyze.dev.model.User;
+import com.econolyze.dev.entity.User;
 import com.econolyze.dev.service.UserManager;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;

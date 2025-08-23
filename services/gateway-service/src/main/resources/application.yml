@@ -29,13 +29,12 @@ spring:
           filters:
             - PrefixPath=/auth
 
-        # Futuros serviços (comentados)
-        # - id: api-service
-        #   uri: http://127.0.0.1:8082
-        #   predicates:
-        #     - Path=/api/**
-        #   filters:
-        #     - StripPrefix=1
+        - id: financial-service
+          uri: http://127.0.0.1:8082
+          predicates:
+            - Path=/api/**
+          filters:
+             - StripPrefix=1
 
   security:
     oauth2:

@@ -1,4 +1,4 @@
-package com.econolyze.dev.model;
+package com.econolyze.dev.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
