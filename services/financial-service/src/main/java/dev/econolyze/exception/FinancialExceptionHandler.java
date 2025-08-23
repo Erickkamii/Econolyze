@@ -9,7 +9,7 @@ public class FinancialExceptionHandler implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception exception){
         return Response
-                .status(Response.Status.INTERNAL_SERVER_ERROR)
+                .status(Response.Status.BAD_REQUEST)
                 .entity(new ErrorResponse(exception.getMessage()))
                 .build();
     }
