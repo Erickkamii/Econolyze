@@ -1,18 +1,29 @@
 package dev.econolyze.resource;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import dev.econolyze.dto.CategoryDTO;
+import dev.econolyze.services.CategoryService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
+import java.util.List;
 
 @Path("/api/category")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class CategoryResource {
+
+    @Inject
+    CategoryService categoryService;
+
     @GET
     @Path("/all")
-    public String getAll() {
-        return "all categories";
+    public List<CategoryDTO> getAll() {
+        return categoryService.listAll();
+    }
+
+    @POST
+    public CategoryDTO addCategory(CategoryDTO category) throws Exception {
+        return categoryService.addNewCategory(category);
     }
 }

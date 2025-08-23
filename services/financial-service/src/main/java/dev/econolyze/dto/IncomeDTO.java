@@ -10,4 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class IncomeDTO {
+    private Long id;
+    private String name;
+    private Double amount;
+    private String category;
+    private String description;
+    private String date;
 }

@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DashboardSummaryDTO {
+    private Long id;
+    private Long income;
+    private Long expenses;
+    private Long balance;
 }

@@ -10,4 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MonthlyReportDTO {
+    private Long id;
+    private String month;
+    private Double income;
+    private Double expenses;
+    private Double balance;
 }
