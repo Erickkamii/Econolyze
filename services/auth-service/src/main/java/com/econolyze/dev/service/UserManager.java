@@ -71,8 +71,8 @@ public class UserManager {
         return LoginResponseDTO.builder()
                 .userId(user.id)
                 .username(username)
-                .refreshToken(TokenGenerator.generateRefreshToken(username))
-                .authToken(TokenGenerator.generate(user.getUsername(),user.getRoles()))
+                .refreshToken(TokenGenerator.generateRefreshToken(user.id, username))
+                .authToken(TokenGenerator.generate(user.id, user.getUsername(),user.getRoles()))
                 .build();
     }
 
@@ -97,8 +97,8 @@ public class UserManager {
             return LoginResponseDTO.builder()
                     .username(user.getUsername())
                     .userId(user.id)
-                    .authToken(TokenGenerator.generate(user.getUsername(), user.getRoles()))
-                    .refreshToken(TokenGenerator.generateRefreshToken(user.getUsername()))
+                    .authToken(TokenGenerator.generate(user.id, user.getUsername(), user.getRoles()))
+                    .refreshToken(TokenGenerator.generateRefreshToken(user.id, user.getUsername()))
                     .build();
         } catch (Exception e) {
             System.err.println("Erro no refresh: " + e.getMessage());
