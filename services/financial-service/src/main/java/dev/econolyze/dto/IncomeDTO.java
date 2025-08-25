@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -12,8 +15,8 @@ import lombok.NoArgsConstructor;
 public class IncomeDTO {
     private Long id;
     private String name;
-    private Double amount;
+    private BigDecimal amount;
     private String category;
     private String description;
-    private String date;
+    private LocalDate date;
 }
