@@ -5,6 +5,7 @@ import dev.econolyze.dto.BalanceDTO;
 import dev.econolyze.dto.ExpenseDTO;
 import dev.econolyze.dto.IncomeDTO;
 import dev.econolyze.dto.TransactionDTO;
+import dev.econolyze.entity.Balance;
 import dev.econolyze.entity.Expense;
 import dev.econolyze.entity.Income;
 import dev.econolyze.entity.Transaction;
@@ -14,6 +15,7 @@ import dev.econolyze.repository.IncomeRepository;
 import dev.econolyze.repository.TransactionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +44,7 @@ public class TransactionService {
                 .toList();
     }
 
+    @Transactional
     public TransactionDTO saveTransaction(TransactionDTO transactionDTO) {
         Transaction transaction = objectMapper.convertValue(transactionDTO, Transaction.class);
         transactionRepository.persist(transaction);
@@ -50,7 +53,7 @@ public class TransactionService {
     }
 
     private void updateUserBalance(TransactionDTO transactionDTO, Long userId) {
-        var balance = balanceRepository.findById(userId);
+        Balance balance = balanceRepository.findById(userId);
         if (balance != null) {
             if(transactionDTO.getType().equals("INCOME")||transactionDTO.getType().equals("REFUND")){
                 balance.setIncome(transactionDTO.getAmount());
