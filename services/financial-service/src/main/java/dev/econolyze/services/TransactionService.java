@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -54,31 +55,13 @@ public class TransactionService {
 
     private void updateUserBalance(TransactionDTO transactionDTO, Long userId) {
         Balance balance = balanceRepository.findById(userId);
+        BalanceDTO balanceDTO;
         if (balance != null) {
-            if(transactionDTO.getType().equals("INCOME")||transactionDTO.getType().equals("REFUND")){
-                balance.setIncome(transactionDTO.getAmount());
-                balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
-                IncomeDTO iDto = IncomeDTO.builder()
-                        .amount(transactionDTO.getAmount())
-                        .category(transactionDTO.getCategory())
-                        .date(LocalDate.now())
-                        .name(transactionDTO.getDescription())
-                        .build();
-                incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
-            } else {
-                balance.setExpenses(transactionDTO.getAmount());
-                balance.setBalance(balance.getBalance().subtract(transactionDTO.getAmount()));
-                ExpenseDTO eDTO = ExpenseDTO.builder()
-                        .amount(transactionDTO.getAmount())
-                        .category(transactionDTO.getCategory())
-                        .date(LocalDate.now())
-                        .name(transactionDTO.getDescription())
-                        .build();
-                expenseRepository.persist(objectMapper.convertValue(eDTO, Expense.class));
-            }
-            balanceRepository.persist(balance);
+            balanceDTO = persistTransaction(transactionDTO, balance);
+        } else {
+            balance = newBalance(userId);
+            balanceDTO = persistTransaction(transactionDTO, balance);
         }
-        objectMapper.convertValue(balance, BalanceDTO.class);
     }
 
     public TransactionDTO mapToDTO(Transaction t) {
@@ -92,5 +75,43 @@ public class TransactionService {
                 .userId(t.getUserId())
                 .method(t.getMethod().toString())
                 .build();
+    }
+
+    private BalanceDTO persistTransaction(TransactionDTO transactionDTO, Balance balance){
+        if(transactionDTO.getType().equals("INCOME")||transactionDTO.getType().equals("REFUND")){
+            balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
+            balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
+            IncomeDTO iDto = IncomeDTO.builder()
+                    .amount(transactionDTO.getAmount())
+                    .category(transactionDTO.getCategory())
+                    .date(LocalDate.now())
+                    .name(transactionDTO.getDescription())
+                    .build();
+            incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
+        } else {
+            balance.setExpenses(balance.getExpenses().add(transactionDTO.getAmount()));
+            balance.setBalance(balance.getBalance().subtract(transactionDTO.getAmount()));
+            ExpenseDTO eDTO = ExpenseDTO.builder()
+                    .amount(transactionDTO.getAmount())
+                    .category(transactionDTO.getCategory())
+                    .date(LocalDate.now())
+                    .name(transactionDTO.getDescription())
+                    .build();
+            expenseRepository.persist(objectMapper.convertValue(eDTO, Expense.class));
+        }
+        balanceRepository.persist(balance);
+        return objectMapper.convertValue(balance, BalanceDTO.class);
+    }
+
+    private Balance newBalance(Long userId){
+        BalanceDTO balanceDTO =BalanceDTO.builder()
+                .userId(userId)
+                .balance(BigDecimal.ZERO)
+                .balanceDifference(BigDecimal.ZERO)
+                .date(LocalDate.now())
+                .income(BigDecimal.ZERO)
+                .expenses(BigDecimal.ZERO)
+                .build();
+        return objectMapper.convertValue(balanceDTO, Balance.class);
     }
 }
