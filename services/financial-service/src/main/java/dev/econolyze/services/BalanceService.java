@@ -5,6 +5,7 @@ import dev.econolyze.entity.Balance;
 import dev.econolyze.repository.BalanceRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BalanceService {
 
-    private static BalanceRepository balanceRepository;
+    @Inject
+    BalanceRepository balanceRepository;
 
-    public static BalanceDTO getBalanceByUserId(Long userId){
+    @Transactional
+    public BalanceDTO getBalanceByUserId(Long userId){
         Balance balance = balanceRepository.findById(userId);
         return BalanceDTO.builder()
                 .userId(balance.getUserId())

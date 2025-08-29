@@ -1,8 +1,8 @@
 package dev.econolyze.resource;
 
 import dev.econolyze.dto.BalanceDTO;
-import dev.econolyze.entity.Balance;
 import dev.econolyze.services.BalanceService;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
@@ -11,9 +11,11 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class BalanceResource {
 
+    @Inject
+    BalanceService balanceService;
     @GET
     @Path("/{userId}")
     public BalanceDTO getBalanceByUserId(@PathParam("userId") Long userId) {
-        return BalanceService.getBalanceByUserId(userId);
+        return balanceService.getBalanceByUserId(userId);
     }
 }
