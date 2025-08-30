@@ -85,7 +85,8 @@ public class TransactionService {
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
                     .date(LocalDate.now())
-                    .name(transactionDTO.getDescription())
+                    .userId(transactionDTO.getUserId())
+                    .description(transactionDTO.getDescription())
                     .build();
             incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
         } else {
@@ -95,7 +96,8 @@ public class TransactionService {
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
                     .date(LocalDate.now())
-                    .name(transactionDTO.getDescription())
+                    .userId(transactionDTO.getUserId())
+                    .description(transactionDTO.getDescription())
                     .build();
             expenseRepository.persist(objectMapper.convertValue(eDTO, Expense.class));
         }

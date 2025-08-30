@@ -1,5 +1,6 @@
 package dev.econolyze.entity;
 
+import dev.econolyze.enums.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,16 @@ public class Expense {
     private Long id;
     private String description;
     private Double amount;
-    private Long categoryId;
+    @Column(name = "categoryId")
+    private Integer categoryId;
     private Long userId;
+
+    @Transient
+    public Category getCategory() {
+        return categoryId != null ? Category.fromCode(categoryId): null;
+    }
+
+    public void setCategory(Category category) {
+        this.categoryId = category.getCode();
+    }
 }
