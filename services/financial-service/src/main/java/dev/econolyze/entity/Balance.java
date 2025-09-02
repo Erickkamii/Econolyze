@@ -23,7 +23,6 @@ public class Balance {
     private LocalDate date;
     private BigDecimal income;
     private BigDecimal expenses;
-    private BigDecimal balanceDifference;
     @Version
     public Long version;
 

@@ -38,6 +38,8 @@ public class TransactionService {
     IncomeRepository incomeRepository;
     @Inject
     ExpenseRepository expenseRepository;
+    @Inject
+    BalanceService balanceService;
 
     public List<TransactionDTO> getAllTransactionsByUserId(Long userId) {
         return transactionRepository.findAllTransactionsByUserId(userId).stream()
@@ -81,6 +83,7 @@ public class TransactionService {
         if(transactionDTO.getType().equals("INCOME")||transactionDTO.getType().equals("REFUND")){
             balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
             balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
+            balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
             IncomeDTO iDto = IncomeDTO.builder()
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
@@ -92,6 +95,7 @@ public class TransactionService {
         } else {
             balance.setExpenses(balance.getExpenses().add(transactionDTO.getAmount()));
             balance.setBalance(balance.getBalance().subtract(transactionDTO.getAmount()));
+            balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
             ExpenseDTO eDTO = ExpenseDTO.builder()
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
