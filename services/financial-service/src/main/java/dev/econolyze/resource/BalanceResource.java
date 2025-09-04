@@ -4,11 +4,8 @@ import dev.econolyze.dto.BalanceDTO;
 import dev.econolyze.services.BalanceService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 
 @Path("/api/balance")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
 public class BalanceResource {
 
     @Inject

@@ -16,6 +16,6 @@ public class FinancialGoalDTO {
     private String name;
     private BigDecimal amount;
     private String description;
-    private String category;
+    private String type;
     private String status;
 }

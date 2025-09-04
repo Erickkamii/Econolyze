@@ -1,11 +1,14 @@
 package dev.econolyze.entity;
 
+import dev.econolyze.enums.GoalStatus;
 import dev.econolyze.enums.GoalType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "financial_goal")
@@ -20,16 +23,23 @@ public class FinancialGoal {
     @Column(name = "user_id")
     private Long userId;
     private String name;
-    private Double amount;
+    private BigDecimal amount;
     private String description;
     private Integer typeCode;
-    private String status;
+    @Column(name = "status")
+    private Integer statusCode;
 
     @Transient
-    public GoalType getCategory(){
+    public GoalType getType(){
         return typeCode != null ? GoalType.fromCode(typeCode): null;
     }
     public void setType(GoalType type){
         this.typeCode = type.getCode();
+    }
+    @Transient
+    public GoalStatus getStatus(){ return statusCode != null ? GoalStatus.fromCode(statusCode): null;
+    }
+    public void setStatus(GoalStatus status){
+        this.statusCode = status.getCode();
     }
 }

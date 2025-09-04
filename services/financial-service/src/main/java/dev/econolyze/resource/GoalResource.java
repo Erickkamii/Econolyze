@@ -1,18 +1,26 @@
 package dev.econolyze.resource;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+import dev.econolyze.dto.FinancialGoalDTO;
+import dev.econolyze.services.GoalService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
 
 @Path( "/api/goal")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
 public class GoalResource {
+
+    @Inject
+    GoalService goalService;
+
     @GET
     @Path("/all")
     public String getAll() {
         return "all goals";
+    }
+
+    @POST
+    public Response createNewGoal(FinancialGoalDTO goalDTO) {
+        FinancialGoalDTO createdGoal = goalService.createNewGoal(goalDTO);
+        return Response.status(Response.Status.CREATED).entity(createdGoal).build();
     }
 }
