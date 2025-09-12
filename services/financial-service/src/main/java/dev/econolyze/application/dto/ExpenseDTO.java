@@ -20,4 +20,6 @@ public class ExpenseDTO {
     private String category;
     private String description;
     private LocalDate date;
+    private String method;
+    private Long financialGoalId;
 }

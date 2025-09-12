@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.List;
 
+import static java.util.Objects.isNull;
+
 @ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
@@ -33,6 +35,36 @@ public class IncomeService {
                 .toList();
     }
 
+
+    protected void persistIncome(TransactionDTO transactionDTO, Balance balance){
+        balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
+        balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
+        balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
+        IncomeDTO iDto = new IncomeDTO();
+        if (isNull(transactionDTO.getFinancialGoalId())) {
+            IncomeDTO.builder()
+                    .amount(transactionDTO.getAmount())
+                    .category(transactionDTO.getCategory())
+                    .date(LocalDate.now())
+                    .userId(transactionDTO.getUserId())
+                    .description(transactionDTO.getDescription())
+                    .method(transactionDTO.getMethod())
+                    .build();
+        }
+        else{
+            IncomeDTO.builder()
+                    .amount(transactionDTO.getAmount())
+                    .category(transactionDTO.getCategory())
+                    .date(LocalDate.now())
+                    .userId(transactionDTO.getUserId())
+                    .description(transactionDTO.getDescription())
+                    .method(transactionDTO.getMethod())
+                    .financialGoalId(transactionDTO.getFinancialGoalId())
+                    .build();
+        }
+        incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
+    }
+
     private IncomeDTO mapToDTO(Income income){
         return IncomeDTO.builder()
                 .id(income.getId())
@@ -42,22 +74,8 @@ public class IncomeService {
                 .category(income.getCategory().toString())
                 .financialGoalId(income.getFinancialGoalId())
                 .amount(income.getAmount())
+                .method(income.getPaymentMethod().toString())
                 .description(income.getDescription())
                 .build();
-    }
-
-
-    protected void persistIncome(TransactionDTO transactionDTO, Balance balance){
-        balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
-        balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
-        balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
-        IncomeDTO iDto = IncomeDTO.builder()
-                .amount(transactionDTO.getAmount())
-                .category(transactionDTO.getCategory())
-                .date(LocalDate.now())
-                .userId(transactionDTO.getUserId())
-                .description(transactionDTO.getDescription())
-                .build();
-        incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
     }
 }

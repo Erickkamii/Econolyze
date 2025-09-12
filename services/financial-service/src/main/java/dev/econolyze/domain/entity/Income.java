@@ -1,6 +1,7 @@
 package dev.econolyze.domain.entity;
 
 import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,11 +24,11 @@ public class Income {
     private String name;
     private String description;
     private BigDecimal amount;
-//    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Long userId;
     private LocalDate date;
     @Column(name = "categoryId")
     private Integer categoryId;
+    private Integer methodId;
     private Long financialGoalId;
 
     @Transient
@@ -38,4 +39,8 @@ public class Income {
     public void setCategory(Category category) {
         this.categoryId = category.getCode();
     }
+
+    public void setPaymentMethod(PaymentMethod method){ this.methodId = method.getCode();}
+    @Transient
+    public PaymentMethod getPaymentMethod(){ return methodId != null ? PaymentMethod.fromCode(methodId): null;}
 }

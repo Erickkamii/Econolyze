@@ -13,5 +13,4 @@ public class GoalProgressDTO {
     private Long id;
     private String name;
     private Double progress;
-    private String color;
 }

@@ -1,11 +1,15 @@
 package dev.econolyze.domain.entity;
 
 import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "expense")
@@ -17,11 +21,15 @@ public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
     private String description;
-    private Double amount;
+    private BigDecimal amount;
+    private Long userId;
+    private LocalDate date;
     @Column(name = "categoryId")
     private Integer categoryId;
-    private Long userId;
+    private Integer methodId;
+    private Long financialGoalId;
 
     @Transient
     public Category getCategory() {
@@ -31,4 +39,8 @@ public class Expense {
     public void setCategory(Category category) {
         this.categoryId = category.getCode();
     }
+
+    public void setPaymentMethod(PaymentMethod method){ this.methodId = method.getCode();}
+    @Transient
+    public PaymentMethod getPaymentMethod(){ return methodId != null ? PaymentMethod.fromCode(methodId): null;}
 }

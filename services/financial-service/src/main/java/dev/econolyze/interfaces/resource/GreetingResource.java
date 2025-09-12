@@ -12,6 +12,6 @@ public class GreetingResource {
     @GET
     @Path("/ping")
     public Response hello() {
-        return Response.ok().entity("Pong!").build();
+        return Response.ok("Pong!").build();
     }
 }

@@ -21,5 +21,6 @@ public class TransactionDTO {
     private String description;
     private LocalDate date;
     private String method;
+    private Long financialGoalId;
 
 }

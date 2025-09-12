@@ -1,5 +1,7 @@
 package dev.econolyze.domain.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
@@ -27,5 +29,14 @@ public enum PaymentMethod {
             }
         }
         throw new IllegalArgumentException("Invalid code: " + code);
+    }
+
+    @JsonCreator
+    public static PaymentMethod fromString(String value) {
+        return PaymentMethod.valueOf(value.toUpperCase());
+    }
+    @JsonValue
+    public String toJson() {
+        return this.name();
     }
 }
