@@ -5,6 +5,7 @@ import dev.econolyze.application.services.BalanceService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 
 @Path("/api/balance")
 public class BalanceResource {
@@ -13,8 +14,8 @@ public class BalanceResource {
     BalanceService balanceService;
     @GET
     @Path("/{userId}")
-    public Response getBalanceByUserId(@PathParam("userId") Long userId) {
+    public RestResponse<BalanceDTO> getBalanceByUserId(@PathParam("userId") Long userId) {
         BalanceDTO balanceDTO = balanceService.getBalanceByUserId(userId);
-        return Response.ok().entity(balanceDTO).build();
+        return RestResponse.ok(balanceDTO);
     }
 }

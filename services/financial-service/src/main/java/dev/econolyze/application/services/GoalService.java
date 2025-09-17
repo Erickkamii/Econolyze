@@ -64,6 +64,7 @@ public class GoalService {
         if(financialGoalDTO.getType().equals("SAVING")||financialGoalDTO.getType().equals("INVESTMENT")){
             if(financialGoalDTO.getStatus().equals("ACTIVE"))
                 balanceDTO.setBalance(balanceDTO.getBalance().subtract(financialGoalDTO.getAmount()));
+            BigDecimal cdiRate = BigDecimal.valueOf(13.0);
 
         } else {
             balanceDTO.setBalance(balanceDTO.getBalance().add(financialGoalDTO.getAmount()));
