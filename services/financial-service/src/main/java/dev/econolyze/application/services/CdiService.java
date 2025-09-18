@@ -24,7 +24,7 @@ public class CdiService {
 
     private volatile BigDecimal cachedCdiRate = BigDecimal.valueOf(14.90);
     @Getter
-    private  volatile LocalDate lastUpdate = LocalDate.now();
+    private volatile LocalDate lastUpdate = LocalDate.now();
 
     public Uni<BigDecimal> getCurrentCdiRateAsync(){
         return bancoCentralConfig.getLatestCdiRate(1, "json")
@@ -39,19 +39,23 @@ public class CdiService {
     public void updateCdiRate(){
         try{
             List<Map<String, Object>> response = bancoCentralConfig.getLatestCdiRateSync(1, "json");
-            if (!nonNull(response) || response.isEmpty()) {
+            if (nonNull(response) && !response.isEmpty()) {
                 BigDecimal newRate = extractCdiRate(response);
                 this.cachedCdiRate = newRate;
                 this.lastUpdate = LocalDate.now();
+                System.out.println("CDI atualizado para: " + newRate + "%");
+            } else {
+                System.out.println("Resposta vazia da API do Banco Central");
             }
         } catch (Exception e){
             System.err.println("Erro ao atualizar CDI: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private BigDecimal extractCdiRate(List<Map<String, Object>> response){
         if(nonNull(response) && !response.isEmpty()){
-            Map<String, Object> latestRate = response.get(0);
+            Map<String, Object> latestRate = response.getFirst();
             double rate = Double.parseDouble(latestRate.get("valor").toString());
             return BigDecimal.valueOf(rate);
         }
@@ -62,7 +66,7 @@ public class CdiService {
         return CdiRateDTO.builder()
                 .currentRate(this.cachedCdiRate)
                 .lastUpdate(this.lastUpdate)
+                .source("Banco Central do Brasil")
                 .build();
     }
-
 }
