@@ -5,20 +5,23 @@ import dev.econolyze.application.services.TransactionService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
+
+import java.util.List;
 
 @Path("/api/transaction")
 public class TransactionResource {
     @Inject
     TransactionService transactionService;
     @POST
-    public Response addTransaction(TransactionDTO transactionDto) {
+    public RestResponse<TransactionDTO> addTransaction(TransactionDTO transactionDto) {
         TransactionDTO transactionDTO = transactionService.saveTransaction(transactionDto);
-        return Response.status(Response.Status.CREATED).entity(transactionDTO).build();
+        return RestResponse.ok(transactionDTO);
     }
     @GET
     @Path("/{userId}")
-    public Response getAllTransactionsByUserId(@PathParam("userId") Long userId) {
+    public RestResponse<Iterable<TransactionDTO>> getAllTransactionsByUserId(@PathParam("userId") Long userId) {
         Iterable<TransactionDTO> transactions = transactionService.getAllTransactionsByUserId(userId);
-        return Response.ok().entity(transactions).build();
+        return RestResponse.ok(transactions);
     }
 }

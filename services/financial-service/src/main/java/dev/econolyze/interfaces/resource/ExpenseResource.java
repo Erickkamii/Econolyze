@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class ExpenseResource {
 
     @GET
     @Path("{userId}")
-    public Response getAll(@PathParam("userId") Long userId) {
+    public RestResponse<List<ExpenseDTO>> getAll(@PathParam("userId") Long userId) {
         List<ExpenseDTO> expenses = expenseService.getAllExpensesByUserId(userId);
-        return Response.ok().entity(expenses).build();
+        return RestResponse.ok(expenses);
     }
 }

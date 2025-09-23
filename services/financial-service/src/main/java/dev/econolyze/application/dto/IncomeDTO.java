@@ -21,5 +21,5 @@ public class IncomeDTO {
     private String description;
     private LocalDate date;
     private String method;
-    private Long financialGoalId;
+    private Integer financialGoalId;
 }

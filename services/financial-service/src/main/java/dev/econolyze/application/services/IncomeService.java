@@ -6,6 +6,7 @@ import dev.econolyze.application.dto.IncomeDTO;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.domain.entity.Income;
+import dev.econolyze.domain.enums.Category;
 import dev.econolyze.infrastructure.repository.IncomeRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,6 +36,12 @@ public class IncomeService {
                 .toList();
     }
 
+    public List<IncomeDTO> getIncomesByUserIdAndCategory(Long userId, String category){
+        return incomeRepository.findAllIncomesByUserIdAndCategory(userId, category).stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
 
     protected void persistIncome(TransactionDTO transactionDTO, Balance balance){
         balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
@@ -42,7 +49,7 @@ public class IncomeService {
         balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
         IncomeDTO iDto = new IncomeDTO();
         if (isNull(transactionDTO.getFinancialGoalId())) {
-            IncomeDTO.builder()
+            iDto = IncomeDTO.builder()
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
                     .date(LocalDate.now())
@@ -52,7 +59,7 @@ public class IncomeService {
                     .build();
         }
         else{
-            IncomeDTO.builder()
+            iDto = IncomeDTO.builder()
                     .amount(transactionDTO.getAmount())
                     .category(transactionDTO.getCategory())
                     .date(LocalDate.now())

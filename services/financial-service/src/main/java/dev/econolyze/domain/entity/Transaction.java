@@ -1,6 +1,7 @@
 package dev.econolyze.domain.entity;
 
 import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.GoalType;
 import dev.econolyze.domain.enums.PaymentMethod;
 import dev.econolyze.domain.enums.TransactionType;
 import jakarta.persistence.*;
@@ -24,7 +25,8 @@ public class Transaction {
     private Long id;
     private BigDecimal amount;
     private Long userId;
-    private Long financialGoalId;
+    @Column(name = "financialGoalId")
+    private Integer financialGoalId;
     @Column(name = "category_code")
     private Integer categoryCode;
     @Column(name = "type_code")
@@ -58,4 +60,8 @@ public class Transaction {
     }
 
     public void setMethod(PaymentMethod paymentMethod) { this.methodCode = paymentMethod.getCode();}
+
+    @Transient
+    public GoalType getGoalType(){ return financialGoalId != null ? GoalType.fromCode(financialGoalId): null;}
+    public void setGoalType(GoalType type){ this.financialGoalId = type.getCode();}
 }

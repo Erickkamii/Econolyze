@@ -6,6 +6,7 @@ import dev.econolyze.application.services.GoalService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 
 @Path( "/api/goal")
 public class GoalResource {
@@ -21,22 +22,22 @@ public class GoalResource {
 
     @GET
     @Path("/{goalId}")
-    public Response getGoalById(@PathParam("goalId") Long goalId) {
+    public RestResponse<FinancialGoalDTO> getGoalById(@PathParam("goalId") Long goalId) {
         FinancialGoalDTO goalDTO = goalService.getGoalById(goalId);
-        return Response.ok().entity(goalDTO).build();
+        return RestResponse.ok(goalDTO);
     }
 
     @GET
     @Path("/progress/{goalId}")
-    public Response getGoalProgress(@PathParam("goalId") Long goalId) {
+    public RestResponse<GoalProgressDTO> getGoalProgress(@PathParam("goalId") Long goalId) {
         Long userId = 1L;
         GoalProgressDTO progressDTO = goalService.getGoalProgress(goalId, userId);
-        return Response.ok().entity(progressDTO).build();
+        return RestResponse.ok(progressDTO);
     }
 
     @POST
-    public Response createNewGoal(FinancialGoalDTO goalDTO) {
+    public RestResponse<FinancialGoalDTO> createNewGoal(FinancialGoalDTO goalDTO) {
         FinancialGoalDTO createdGoal = goalService.createNewGoal(goalDTO);
-        return Response.status(Response.Status.CREATED).entity(createdGoal).build();
+        return RestResponse.ok(createdGoal);
     }
 }

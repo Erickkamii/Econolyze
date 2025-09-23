@@ -1,6 +1,7 @@
 package dev.econolyze.domain.entity;
 
 import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.GoalType;
 import dev.econolyze.domain.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,7 +30,7 @@ public class Income {
     @Column(name = "categoryId")
     private Integer categoryId;
     private Integer methodId;
-    private Long financialGoalId;
+    private Integer financialGoalId;
 
     @Transient
     public Category getCategory() {
@@ -43,4 +44,8 @@ public class Income {
     public void setPaymentMethod(PaymentMethod method){ this.methodId = method.getCode();}
     @Transient
     public PaymentMethod getPaymentMethod(){ return methodId != null ? PaymentMethod.fromCode(methodId): null;}
+
+    @Transient
+    public GoalType getGoalType(){ return financialGoalId != null ? GoalType.fromCode(financialGoalId): null;}
+    public void setGoalType(GoalType type){ this.financialGoalId = type.getCode();}
 }

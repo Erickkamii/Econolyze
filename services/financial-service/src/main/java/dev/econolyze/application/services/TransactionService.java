@@ -63,6 +63,7 @@ public class TransactionService {
                 .type(t.getType().toString())
                 .category(t.getCategory().toString())
                 .date(t.getDate())
+                .financialGoalId(t.getFinancialGoalId())
                 .description(t.getDescription())
                 .userId(t.getUserId())
                 .method(t.getMethod().toString())

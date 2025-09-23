@@ -5,13 +5,14 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 
 @Path("/api")
 public class GreetingResource {
 
     @GET
     @Path("/ping")
-    public Response hello() {
-        return Response.ok("Pong!").build();
+    public RestResponse<String> hello() {
+        return RestResponse.ok("Pong!");
     }
 }
