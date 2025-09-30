@@ -2,17 +2,11 @@ package dev.econolyze.application.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.econolyze.application.dto.BalanceDTO;
-import dev.econolyze.application.dto.ExpenseDTO;
-import dev.econolyze.application.dto.IncomeDTO;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.domain.entity.Balance;
-import dev.econolyze.domain.entity.Expense;
-import dev.econolyze.domain.entity.Income;
 import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
-import dev.econolyze.infrastructure.repository.ExpenseRepository;
-import dev.econolyze.infrastructure.repository.IncomeRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -66,11 +60,11 @@ public class TransactionService {
                 .financialGoalId(t.getFinancialGoalId())
                 .description(t.getDescription())
                 .userId(t.getUserId())
-                .method(t.getMethod().toString())
+                .method(t.getMethod())
                 .build();
     }
 
-    protected BalanceDTO persistTransaction(TransactionDTO transactionDTO, Balance balance){
+    protected void persistTransaction(TransactionDTO transactionDTO, Balance balance){
         TransactionType type = TransactionType.valueOf(transactionDTO.getType());
         if(type.isIncreaseBalance()){
             incomeService.persistIncome(transactionDTO, balance);
@@ -78,7 +72,7 @@ public class TransactionService {
             expenseService.persistExpense(transactionDTO, balance);
         }
         balanceRepository.persist(balance);
-        return objectMapper.convertValue(balance, BalanceDTO.class);
+        objectMapper.convertValue(balance, BalanceDTO.class);
     }
 
     protected Balance newBalance(Long userId){

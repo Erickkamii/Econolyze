@@ -46,12 +46,11 @@ public class BalanceService {
 
     public void updateUserBalance(TransactionDTO transactionDTO, Long userId) {
         Balance balance = balanceRepository.findById(userId);
-        BalanceDTO balanceDTO;
         if (balance != null) {
-            balanceDTO = transactionService.persistTransaction(transactionDTO, balance);
+            transactionService.persistTransaction(transactionDTO, balance);
         } else {
             balance = transactionService.newBalance(userId);
-            balanceDTO = transactionService.persistTransaction(transactionDTO, balance);
+            transactionService.persistTransaction(transactionDTO, balance);
         }
     }
 }

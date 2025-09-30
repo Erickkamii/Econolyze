@@ -8,8 +8,7 @@ public enum TransactionType {
     EXPENSE(2, false, true),
     TRANSFER(3, false, false),
     SAVINGS(4, false, false),
-    INVESTMENT(5, true, false),
-    REFUND(6, true, false);
+    REFUND(5, true, false);
 
     private final int code;
     private final boolean increaseBalance;

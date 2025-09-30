@@ -1,5 +1,6 @@
 package dev.econolyze.application.dto;
 
+import dev.econolyze.domain.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class TransactionDTO {
     private String type;
     private String description;
     private LocalDate date;
-    private String method;
+    private PaymentMethod method;
     private Integer financialGoalId;
 
 }

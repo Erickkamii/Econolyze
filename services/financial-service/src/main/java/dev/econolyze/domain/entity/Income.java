@@ -4,10 +4,7 @@ import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.GoalType;
 import dev.econolyze.domain.enums.PaymentMethod;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +15,7 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Income {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +27,7 @@ public class Income {
     private LocalDate date;
     @Column(name = "categoryId")
     private Integer categoryId;
+    @Column(name = "methodId")
     private Integer methodId;
     private Integer financialGoalId;
 
@@ -41,9 +40,9 @@ public class Income {
         this.categoryId = category.getCode();
     }
 
-    public void setPaymentMethod(PaymentMethod method){ this.methodId = method.getCode();}
     @Transient
     public PaymentMethod getPaymentMethod(){ return methodId != null ? PaymentMethod.fromCode(methodId): null;}
+    public void setPaymentMethod(PaymentMethod method){ this.methodId = method.getCode();}
 
     @Transient
     public GoalType getGoalType(){ return financialGoalId != null ? GoalType.fromCode(financialGoalId): null;}

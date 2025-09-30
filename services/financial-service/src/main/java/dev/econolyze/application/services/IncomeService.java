@@ -36,8 +36,8 @@ public class IncomeService {
                 .toList();
     }
 
-    public List<IncomeDTO> getIncomesByUserIdAndCategory(Long userId, String category){
-        return incomeRepository.findAllIncomesByUserIdAndCategory(userId, category).stream()
+    public List<IncomeDTO> getIncomesByUserIdAndCategory(Long userId, String transactionType){
+        return incomeRepository.findAllIncomesByUserIdAndCategory(userId, transactionType).stream()
                 .map(this::mapToDTO)
                 .toList();
     }
@@ -47,7 +47,8 @@ public class IncomeService {
         balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
         balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
         balanceService.setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class));
-        IncomeDTO iDto = new IncomeDTO();
+        new IncomeDTO();
+        IncomeDTO iDto;
         if (isNull(transactionDTO.getFinancialGoalId())) {
             iDto = IncomeDTO.builder()
                     .amount(transactionDTO.getAmount())
@@ -69,7 +70,7 @@ public class IncomeService {
                     .financialGoalId(transactionDTO.getFinancialGoalId())
                     .build();
         }
-        incomeRepository.persist(objectMapper.convertValue(iDto, Income.class));
+        incomeRepository.persist(mapToEntity(iDto));
     }
 
     private IncomeDTO mapToDTO(Income income){
@@ -81,8 +82,23 @@ public class IncomeService {
                 .category(income.getCategory().toString())
                 .financialGoalId(income.getFinancialGoalId())
                 .amount(income.getAmount())
-                .method(income.getPaymentMethod().toString())
+                .method(income.getPaymentMethod())
                 .description(income.getDescription())
                 .build();
     }
+
+    private Income mapToEntity(IncomeDTO dto) {
+        return Income.builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .amount(dto.getAmount())
+                .userId(dto.getUserId())
+                .date(dto.getDate())
+                .categoryId(dto.getCategory() != null ? Category.fromString(dto.getCategory()).getCode() : null)
+                .methodId(dto.getMethod() != null ? dto.getMethod().getCode() : null)
+                .financialGoalId(dto.getFinancialGoalId())
+                .build();
+    }
+
 }
