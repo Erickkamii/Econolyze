@@ -6,7 +6,6 @@ import dev.econolyze.application.dto.IncomeDTO;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.domain.entity.Income;
-import dev.econolyze.domain.enums.Category;
 import dev.econolyze.infrastructure.repository.IncomeRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -79,7 +78,7 @@ public class IncomeService {
                 .userId(income.getUserId())
                 .name(income.getName())
                 .date(income.getDate())
-                .category(income.getCategory().toString())
+                .category(income.getCategory())
                 .financialGoalId(income.getFinancialGoalId())
                 .amount(income.getAmount())
                 .method(income.getPaymentMethod())
@@ -95,7 +94,7 @@ public class IncomeService {
                 .amount(dto.getAmount())
                 .userId(dto.getUserId())
                 .date(dto.getDate())
-                .categoryId(dto.getCategory() != null ? Category.fromString(dto.getCategory()).getCode() : null)
+                .categoryId(dto.getCategory() != null ? dto.getCategory().getCode() : null)
                 .methodId(dto.getMethod() != null ? dto.getMethod().getCode() : null)
                 .financialGoalId(dto.getFinancialGoalId())
                 .build();

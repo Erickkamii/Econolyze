@@ -1,5 +1,7 @@
 package dev.econolyze.application.dto;
 
+import dev.econolyze.domain.enums.GoalStatus;
+import dev.econolyze.domain.enums.GoalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,6 @@ public class FinancialGoalDTO {
     private String name;
     private BigDecimal amount;
     private String description;
-    private String type;
-    private String status;
+    private GoalType type;
+    private GoalStatus status;
 }

@@ -5,7 +5,6 @@ import dev.econolyze.application.dto.BalanceDTO;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.domain.entity.Transaction;
-import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -54,8 +53,8 @@ public class TransactionService {
         return TransactionDTO.builder()
                 .id(t.getId())
                 .amount(t.getAmount())
-                .type(t.getType().toString())
-                .category(t.getCategory().toString())
+                .type(t.getType())
+                .category(t.getCategory())
                 .date(t.getDate())
                 .financialGoalId(t.getFinancialGoalId())
                 .description(t.getDescription())
@@ -65,10 +64,9 @@ public class TransactionService {
     }
 
     protected void persistTransaction(TransactionDTO transactionDTO, Balance balance){
-        TransactionType type = TransactionType.valueOf(transactionDTO.getType());
-        if(type.isIncreaseBalance()){
+        if(transactionDTO.getType().isIncreaseBalance()){
             incomeService.persistIncome(transactionDTO, balance);
-        } else if(type.isDecreaseBalance()){
+        } else if(transactionDTO.getType().isDecreaseBalance()){
             expenseService.persistExpense(transactionDTO, balance);
         }
         balanceRepository.persist(balance);

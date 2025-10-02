@@ -1,5 +1,6 @@
 package dev.econolyze.application.dto;
 
+import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,7 @@ public class IncomeDTO {
     private String name;
     private Long userId;
     private BigDecimal amount;
-    private String category;
+    private Category category;
     private String description;
     private LocalDate date;
     private PaymentMethod method;

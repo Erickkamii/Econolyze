@@ -1,6 +1,8 @@
 package dev.econolyze.application.dto;
 
+import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.PaymentMethod;
+import dev.econolyze.domain.enums.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,8 +19,8 @@ public class TransactionDTO {
     private Long id;
     private BigDecimal amount;
     private Long userId;
-    private String category;
-    private String type;
+    private Category category;
+    private TransactionType type;
     private String description;
     private LocalDate date;
     private PaymentMethod method;

@@ -1,7 +1,6 @@
 package dev.econolyze.application.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.econolyze.application.dto.BalanceDTO;
 import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.IncomeDTO;
@@ -26,8 +25,6 @@ public class GoalService {
     ObjectMapper objectMapper;
     @Inject
     AnalyticsService analyticsService;
-    @Inject
-    BalanceService balanceService;
     @Inject
     IncomeService incomeService;
 
@@ -56,19 +53,7 @@ public class GoalService {
                 .name(goal.getName())
                 .amount(goal.getAmount())
                 .description(goal.getDescription())
-                .type(goal.getType().toString())
-                .status(goal.getStatus().toString()).build();
-    }
-
-    public void savingOrInvestment(FinancialGoalDTO financialGoalDTO, BalanceDTO balanceDTO){
-        if(financialGoalDTO.getType().equals("SAVING")||financialGoalDTO.getType().equals("INVESTMENT")){
-            if(financialGoalDTO.getStatus().equals("ACTIVE"))
-                balanceDTO.setBalance(balanceDTO.getBalance().subtract(financialGoalDTO.getAmount()));
-            BigDecimal cdiRate = BigDecimal.valueOf(13.0);
-
-        } else {
-            balanceDTO.setBalance(balanceDTO.getBalance().add(financialGoalDTO.getAmount()));
-        }
-        balanceService.setBalanceDifference(balanceDTO);
+                .type(goal.getType())
+                .status(goal.getStatus()).build();
     }
 }

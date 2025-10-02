@@ -52,10 +52,10 @@ public class ExpenseService {
                 .userId(expense.getUserId())
                 .name(expense.getName())
                 .date(expense.getDate())
-                .category(expense.getCategory().toString())
+                .category(expense.getCategory())
                 .financialGoalId(expense.getFinancialGoalId())
                 .amount(expense.getAmount())
-                .method(expense.getPaymentMethod().toString())
+                .method(expense.getPaymentMethod())
                 .description(expense.getDescription())
                 .build();
     }

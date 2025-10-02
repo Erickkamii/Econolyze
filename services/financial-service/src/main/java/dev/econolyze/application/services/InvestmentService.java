@@ -24,15 +24,15 @@ public class InvestmentService {
             new InvestmentProjectionDTO();
             InvestmentProjectionDTO projection;
             projection = initializeProjection(incomes, userId);
+            BigDecimal cdiAnnualRate = getCdiAnnualRate();
             projection.setDescription("CDI Investment in " + rate + " rate");
             if (rate.equals(Estimate.YEARLY)) {
-                BigDecimal cdiAnnualRate = getCdiAnnualRate();
                 projection.setAmountCdi(projection.getAmountCdi().multiply(BigDecimal.ONE.add(cdiAnnualRate)).setScale(2, RoundingMode.HALF_UP));
             } else if(rate.equals(Estimate.MONTHLY)) {
-                BigDecimal cdiMonthlyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(getCdiAnnualRate()).doubleValue(), 1.0 / 12) - 1);
+                BigDecimal cdiMonthlyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(cdiAnnualRate).doubleValue(), 1.0 / 12) - 1);
                 projection.setAmountCdi(projection.getAmountCdi().multiply(BigDecimal.ONE.add(cdiMonthlyRate)).setScale(2, RoundingMode.HALF_UP));
             } else if (rate.equals(Estimate.DAILY)) {
-                BigDecimal cdiDailyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(getCdiAnnualRate()).doubleValue(), 1.0 / 252) - 1);
+                BigDecimal cdiDailyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(cdiAnnualRate).doubleValue(), 1.0 / 252) - 1);
                 projection.setAmountCdi(projection.getAmountCdi().multiply(BigDecimal.ONE.add(cdiDailyRate)).setScale(2, RoundingMode.HALF_UP));
             }
             return projection;
@@ -58,7 +58,7 @@ public class InvestmentService {
                                     .subtract(BigDecimal.ONE)
                                     .multiply(factor)
                                     .add(BigDecimal.ONE)
-                    ).setScale(2, RoundingMode.HALF_UP));
+                    ).setScale(2, RoundingMode.HALF_EVEN));
             projection.setDescription("CDI Investment in " + rate + " rate with " + percentage + " %");
         }
         return projection;
