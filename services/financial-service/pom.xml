@@ -95,6 +95,12 @@
             <artifactId>quarkus-scheduler</artifactId>
         </dependency>
 
+        <!-- Containerization-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-docker</artifactId>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>io.quarkus</groupId>
