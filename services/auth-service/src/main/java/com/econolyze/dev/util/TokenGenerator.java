@@ -12,6 +12,7 @@ public class TokenGenerator {
 
     public static String generate(Long id, String username, String roles){
         return Jwt.upn(username)
+                .subject(String.valueOf(id))
                 .groups(new HashSet<>(Arrays.asList(roles.split(","))))
                 .expiresAt(Instant.now().plusSeconds(3600))
                 .issuer("econolyze")

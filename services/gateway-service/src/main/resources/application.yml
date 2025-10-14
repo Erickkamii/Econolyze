@@ -1,0 +1,71 @@
+quarkus:
+  application:
+    name: gateway-service
+
+  http:
+    port: 8080
+    cors:
+      ~: true
+      origins: "http://localhost:5173,http://localhost:3000"
+      methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+      headers: "accept,authorization,content-type,x-requested-with"
+      exposed-headers: "Content-Disposition"
+      access-control-max-age: 24H
+
+#  # JWT
+#  smallrye-jwt:
+#    enabled: true
+#    public-key:
+#      location: keys/publicKey.pem
+#    issuer: econolyze
+
+  # Swagger
+  swagger-ui:
+    always-include: true
+    path: /swagger-ui
+
+  # Logging
+  log:
+    level: INFO
+    category:
+      "dev.econolyze": DEBUG
+      "io.quarkus.smallrye.jwt": TRACE
+      "io.quarkus.security": TRACE
+      "io.smallrye.jwt": TRACE
+      "org.jboss.resteasy.reactive.client": DEBUG
+
+  # REST Clients
+  rest-client:
+    auth-service:
+      url: http://localhost:8081
+      scope: jakarta.inject.Singleton
+
+    financial-service:
+      url: http://localhost:8082
+      scope: jakarta.inject.Singleton
+
+#    ai-service:
+#      url: http://localhost:8083
+#      scope: jakarta.inject.Singleton
+
+# Development
+"%dev":
+  quarkus:
+    log:
+      console:
+        format: "%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n"
+        color: true
+
+# Production
+"%prod":
+  quarkus:
+    log:
+      console:
+        json: true
+    rest-client:
+      auth-service:
+        url: ${AUTH_SERVICE_URL}
+      financial-service:
+        url: ${FINANCIAL_SERVICE_URL}
+      ai-service:
+        url: ${AI_SERVICE_URL}
