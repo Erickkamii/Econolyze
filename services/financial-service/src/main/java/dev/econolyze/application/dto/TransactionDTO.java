@@ -25,5 +25,7 @@ public class TransactionDTO {
     private LocalDate date;
     private PaymentMethod method;
     private Integer financialGoalId;
+    private Boolean isRecurring;
+    private Long recurringTemplateId;
 
 }

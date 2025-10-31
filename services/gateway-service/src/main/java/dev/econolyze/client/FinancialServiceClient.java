@@ -1,6 +1,7 @@
 package dev.econolyze.client;
 
 import dev.econolyze.dto.BalanceResponse;
+import dev.econolyze.dto.PagedResponse;
 import dev.econolyze.dto.TransactionRequest;
 import dev.econolyze.dto.TransactionResponse;
 import jakarta.ws.rs.*;
@@ -25,6 +26,15 @@ public interface FinancialServiceClient {
     RestResponse<TransactionResponse> createTransaction(
             @HeaderParam("X-User-Id") Long userId,
             TransactionRequest transaction
+    );
+
+    @GET
+    @Path("/transaction")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Timeout(5000)
+    @Retry(maxRetries = 2)
+    RestResponse<PagedResponse<TransactionResponse>> getTransactions(
+            @HeaderParam("X-User-Id") Long userId
     );
 
     @GET

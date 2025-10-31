@@ -2,15 +2,14 @@ package dev.econolyze.resource;
 
 import dev.econolyze.client.FinancialServiceClient;
 import dev.econolyze.dto.BalanceResponse;
+import dev.econolyze.dto.PagedResponse;
 import dev.econolyze.dto.TransactionRequest;
 import dev.econolyze.dto.TransactionResponse;
 import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.json.JsonNumber;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -61,6 +60,26 @@ public class FinancialServiceResource {
             return financialServiceClient.createTransaction(userId, request);
         } catch (Exception e) {
             LOG.errorf("Erro ao criar transação: %s", e.getMessage());
+            throw new ServiceUnavailableException("financial-service", e);
+        }
+    }
+
+    @GET
+    @Path("/transactions")
+    public RestResponse<PagedResponse<TransactionResponse>> getTransactions(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("10") int size
+    ){
+        JsonNumber userId = jwt.getClaim("userId");
+        if (userId == null) {
+            LOG.warn("JWT inválido: claim userId ausente");
+            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
+        }
+        Long userIdLong = userId.longValueExact();
+        try{
+            return financialServiceClient.getTransactions(userIdLong);
+        } catch (Exception e){
+            LOG.errorf("Erro ao buscar as transações: %s", e.getMessage());
             throw new ServiceUnavailableException("financial-service", e);
         }
     }

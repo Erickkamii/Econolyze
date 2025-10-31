@@ -1,10 +1,13 @@
 package dev.econolyze.application.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.econolyze.application.dto.BalanceDTO;
+import dev.econolyze.application.dto.PagedResponse;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.mapper.BalanceMapper;
+import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.domain.entity.Transaction;
+import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,55 +28,66 @@ public class TransactionService {
     @Inject
     TransactionRepository transactionRepository;
     @Inject
-    ObjectMapper objectMapper;
-    @Inject
     BalanceRepository balanceRepository;
     @Inject
     BalanceService balanceService;
     @Inject
-    IncomeService incomeService;
+    TransactionMapper transactionMapper;
     @Inject
-    ExpenseService expenseService;
+    BalanceMapper balanceMapper;
 
-    public List<TransactionDTO> getAllTransactionsByUserId(Long userId) {
-        return transactionRepository.findAllTransactionsByUserId(userId).stream()
-                .map(this::mapToDTO)
-                .toList();
+    public PagedResponse<TransactionDTO> getAllTransactionsByUserId(Long userId, int page, int pageSize) {
+        return PagedResponse.fromPanacheQuery(
+                transactionRepository.findPagedByUserId(userId, page, pageSize),
+                page, pageSize,
+                transactionMapper::mapToDTO
+        );
     }
 
     @Transactional
-    public TransactionDTO saveTransaction(TransactionDTO transactionDTO) {
-        Transaction transaction = objectMapper.convertValue(transactionDTO, Transaction.class);
-        transactionRepository.persist(transaction);
+    public TransactionDTO saveTransaction(TransactionDTO transactionDTO, Long userId) {
+        transactionDTO.setUserId(userId);
+        Transaction transaction = transactionMapper.mapToEntity(transactionDTO);
         balanceService.updateUserBalance(transactionDTO, transaction.getUserId());
-        return mapToDTO(transaction);
+        transactionRepository.persist(transaction);
+        return transactionMapper.mapToDTO(transaction);
     }
 
-    public TransactionDTO mapToDTO(Transaction t) {
-        return TransactionDTO.builder()
-                .id(t.getId())
-                .amount(t.getAmount())
-                .type(t.getType())
-                .category(t.getCategory())
-                .date(t.getDate())
-                .financialGoalId(t.getFinancialGoalId())
-                .description(t.getDescription())
-                .userId(t.getUserId())
-                .method(t.getMethod())
-                .build();
+    public PagedResponse<TransactionDTO> getAllTransactionsByUserIdAndType(Long userId, TransactionType transactionType, int page, int pageSize) {
+        return PagedResponse.fromPanacheQuery(
+                transactionRepository.findPagedByUserIdAndType(userId, TransactionType.EXPENSE, page,pageSize),
+                page,
+                pageSize,
+                transactionMapper::mapToDTO);
     }
 
-    protected void persistTransaction(TransactionDTO transactionDTO, Balance balance){
+    void persistTransaction(TransactionDTO transactionDTO, Balance balance){
         if(transactionDTO.getType().isIncreaseBalance()){
-            incomeService.persistIncome(transactionDTO, balance);
+            balance.setIncome(balance.getIncome().add(transactionDTO.getAmount()));
+            balance.setBalance(balance.getBalance().add(transactionDTO.getAmount()));
         } else if(transactionDTO.getType().isDecreaseBalance()){
-            expenseService.persistExpense(transactionDTO, balance);
+            balance.setExpenses(balance.getExpenses().add(transactionDTO.getAmount()));
+            balance.setBalance(balance.getBalance().subtract(transactionDTO.getAmount()));
         }
+        balanceService.setBalanceDifference(balanceMapper.mapToDTO(balance));
         balanceRepository.persist(balance);
-        objectMapper.convertValue(balance, BalanceDTO.class);
+        balanceMapper.mapToDTO(balance);
     }
 
-    protected Balance newBalance(Long userId){
+    public PagedResponse<TransactionDTO> getTransactionByUserIdAndCategory(Long userId, Category category, int page, int pageSize){
+        return PagedResponse.fromPanacheQuery(transactionRepository.findPagedByUserIdAndCategory(userId, category, page, pageSize),
+                page,
+                pageSize,
+                transactionMapper::mapToDTO);
+    }
+
+    List<TransactionDTO> getTransactionByUserIdAndType(Long userId, TransactionType type){
+        return transactionRepository.findAllTransactionsByUserIdAndType(userId, type).stream()
+                .map(transactionMapper::mapToDTO)
+                .toList();
+    }
+
+    Balance newBalance(Long userId){
         return Balance.builder()
                 .userId(userId)
                 .balance(BigDecimal.ZERO)

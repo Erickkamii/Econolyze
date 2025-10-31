@@ -1,8 +1,9 @@
 package dev.econolyze.application.services;
 
-import dev.econolyze.application.dto.IncomeDTO;
 import dev.econolyze.application.dto.InvestmentProjectionDTO;
+import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.domain.enums.Estimate;
+import dev.econolyze.domain.enums.TransactionType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -16,10 +17,10 @@ public class InvestmentService {
     @Inject
     CdiService cdiService;
     @Inject
-    IncomeService incomeService;
+    TransactionService transactionService;
 
     public InvestmentProjectionDTO getProjectionBasedOnCdiRate(Long userId, Estimate rate) {
-        List<IncomeDTO> incomes = incomeService.getIncomesByUserIdAndCategory(userId, "investment");
+        List<TransactionDTO> incomes = transactionService.getTransactionByUserIdAndType(userId, TransactionType.INVESTMENT);
         if(!incomes.isEmpty()){
             new InvestmentProjectionDTO();
             InvestmentProjectionDTO projection;
@@ -64,7 +65,7 @@ public class InvestmentService {
         return projection;
     }
     
-    private InvestmentProjectionDTO initializeProjection(List<IncomeDTO> incomes, Long userId){
+    private InvestmentProjectionDTO initializeProjection(List<TransactionDTO> incomes, Long userId){
         InvestmentProjectionDTO projection = new InvestmentProjectionDTO();
         projection.setAmountCdi(BigDecimal.ZERO);
         incomes.forEach(income -> projection.setAmountCdi(projection.getAmountCdi().add(income.getAmount())));

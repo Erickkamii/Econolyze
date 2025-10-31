@@ -12,9 +12,8 @@ public enum Category {
     TRANSPORT(3),
     HEALTH(4),
     INSURANCE(5),
-    INVESTMENT(6),
-    UTILITIES(7),
-    OTHER(8);
+    UTILITIES(6),
+    OTHER(7);
 
     private final int code;
 

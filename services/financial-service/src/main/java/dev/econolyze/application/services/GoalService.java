@@ -1,10 +1,11 @@
 package dev.econolyze.application.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
-import dev.econolyze.application.dto.IncomeDTO;
+import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.mapper.FinancialGoalMapper;
 import dev.econolyze.domain.entity.FinancialGoal;
+import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.FinancialGoalRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -22,38 +23,28 @@ public class GoalService {
     @Inject
     FinancialGoalRepository financialGoalRepository;
     @Inject
-    ObjectMapper objectMapper;
+    FinancialGoalMapper financialGoalMapper;
     @Inject
     AnalyticsService analyticsService;
     @Inject
-    IncomeService incomeService;
+    TransactionService transactionService;
 
     @Transactional
     public FinancialGoalDTO createNewGoal(FinancialGoalDTO goalDTO) {
-        FinancialGoal goal = objectMapper.convertValue(goalDTO, FinancialGoal.class);
+        FinancialGoal goal = financialGoalMapper.mapToEntity(goalDTO);
         financialGoalRepository.persist(goal);
-        return mapToDTO(goal);
+        return financialGoalMapper.mapToDTO(goal);
     }
 
     public FinancialGoalDTO getGoalById(Long id){
-        return mapToDTO(financialGoalRepository.findById(id));
+        return financialGoalMapper.mapToDTO(financialGoalRepository.findById(id));
     }
 
     public GoalProgressDTO getGoalProgress(Long id, Long userId){
         FinancialGoalDTO financialGoalDTO = getGoalById(id);
-        List<IncomeDTO> incomesDto = incomeService.getIncomesByUserId(userId);
-        BigDecimal incomesSum = incomesDto.stream().map(IncomeDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        List<TransactionDTO> transactionDTO = transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME);
+        BigDecimal incomesSum = transactionDTO.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return analyticsService.analyzeGoalProgress(financialGoalDTO, incomesSum);
     }
 
-    private FinancialGoalDTO mapToDTO(FinancialGoal goal) {
-        return FinancialGoalDTO.builder()
-                .id(goal.getId())
-                .userId(goal.getUserId())
-                .name(goal.getName())
-                .amount(goal.getAmount())
-                .description(goal.getDescription())
-                .type(goal.getType())
-                .status(goal.getStatus()).build();
-    }
 }

@@ -3,6 +3,7 @@ package dev.econolyze.application.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.econolyze.application.dto.BalanceDTO;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.mapper.BalanceMapper;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,7 +22,7 @@ public class BalanceService {
     @Inject
     BalanceRepository balanceRepository;
     @Inject
-    ObjectMapper objectMapper;
+    BalanceMapper balanceMapper;
     @Inject
     TransactionService transactionService;
 
@@ -32,7 +33,7 @@ public class BalanceService {
                 .userId(balance.getUserId())
                 .balance(balance.getBalance())
                 .date(balance.getDate())
-                .balanceDifference(setBalanceDifference(objectMapper.convertValue(balance, BalanceDTO.class)))
+                .balanceDifference(setBalanceDifference(balanceMapper.mapToDTO(balance)))
                 .income(balance.getIncome())
                 .expenses(balance.getExpenses())
                 .build();
