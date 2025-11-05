@@ -45,41 +45,38 @@ public class GoalResource {
     @GET
     @Path("/progress/{goalId}")
     public RestResponse<GoalProgressDTO> getGoalProgress(@PathParam("goalId") Long goalId) {
-        Long userId = 1L;
-        GoalProgressDTO progressDTO = goalService.getGoalProgress(goalId, userId);
+        GoalProgressDTO progressDTO = goalService.getGoalProgress(goalId);
         return RestResponse.ok(progressDTO);
     }
 
     @GET
-    @Path("/annual-cdi/{userId}")
-    public RestResponse<InvestmentProjectionDTO> getAnnualInvestmentProgress(@PathParam("userId") Long userId,
-                                                                             @RestQuery("percentage") BigDecimal percentage){
+    @Path("/annual-cdi")
+    public RestResponse<InvestmentProjectionDTO> getAnnualInvestmentProgress(                                                                             @RestQuery("percentage") BigDecimal percentage){
         if ( percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(userId, Estimate.YEARLY);
+            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.YEARLY);
         else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(userId, Estimate.YEARLY, percentage);
+            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.YEARLY, percentage);
         return RestResponse.ok(projectionDTO);
     }
 
     @GET
-    @Path("/monthly-cdi/{userId}")
-    public RestResponse<InvestmentProjectionDTO> getMonthlyInvestmentProgress(@PathParam("userId") Long userId,
+    @Path("/monthly-cdi")
+    public RestResponse<InvestmentProjectionDTO> getMonthlyInvestmentProgress(
                                                                               @RestQuery("percentage") BigDecimal percentage) {
         if ( percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(userId,  Estimate.MONTHLY);
+            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
         else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(userId,  Estimate.MONTHLY, percentage);
+            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.MONTHLY, percentage);
         return RestResponse.ok(projectionDTO);
     }
 
     @GET
-    @Path("/daily-cdi/{userId}")
-    public RestResponse<InvestmentProjectionDTO> getDailyInvestmentProgress(@PathParam("userId") Long userId,
-                                                                            @RestQuery("percentage") BigDecimal percentage) {
+    @Path("/daily-cdi")
+    public RestResponse<InvestmentProjectionDTO> getDailyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
         if(percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(userId,  Estimate.DAILY);
+            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.DAILY);
         else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(userId,  Estimate.DAILY, percentage);
+            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.DAILY, percentage);
         return RestResponse.ok(projectionDTO);
     }
 

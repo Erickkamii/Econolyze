@@ -2,6 +2,7 @@ package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
+import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.FinancialGoal;
 import dev.econolyze.infrastructure.repository.FinancialGoalRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,6 +26,8 @@ public class AnalyticsService {
     FinancialGoalRepository financialGoalRepository;
     @Inject
     GoalService goalService;
+    @Inject
+    UserContext userContext;
 
     public GoalProgressDTO analyzeGoalProgress(FinancialGoalDTO financialGoal, BigDecimal incomesSum) {
         GoalProgressDTO goalProgressDTO = new GoalProgressDTO();
@@ -36,13 +39,14 @@ public class AnalyticsService {
         return goalProgressDTO;
     }
 
-    public List<GoalProgressDTO> analyzeAllGoalProgress(Long userId){
+    public List<GoalProgressDTO> analyzeAllGoalProgress(){
+        Long userId = userContext.getUserId();
         List<FinancialGoal> allGoals = Optional.ofNullable(financialGoalRepository.getAllGoalsByUserId(userId))
                 .orElse(Collections.emptyList());
         return allGoals.stream()
                 .filter(Objects::nonNull)
                 .filter(goal -> goal.getId() != null)
-                .map(goal ->Optional.ofNullable(goalService.getGoalProgress(goal.getId(), userId))
+                .map(goal ->Optional.ofNullable(goalService.getGoalProgress(goal.getId()))
                         .orElse(new GoalProgressDTO())
         ).toList();
     }

@@ -1,8 +1,8 @@
 package dev.econolyze.interfaces.resource;
 
-import dev.econolyze.application.dto.BalanceDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.InvestmentProjectionDTO;
+import dev.econolyze.application.dto.response.BalanceResponse;
 import dev.econolyze.application.services.AnalyticsService;
 import dev.econolyze.application.services.BalanceService;
 import dev.econolyze.application.services.InvestmentService;
@@ -22,21 +22,21 @@ public class DashboardResource {
     @Inject
     AnalyticsService analyticsService;
     @GET
-    @Path("/balance/{userId}")
-    public RestResponse<BalanceDTO> getDashboard(@PathParam("userId") Long userId) {
-        BalanceDTO balanceDTO = balanceService.getBalanceByUserId(userId);
-        return RestResponse.ok(balanceDTO);
+    @Path("/balance")
+    public RestResponse<BalanceResponse> getDashboard() {
+        BalanceResponse balanceResponse = balanceService.getBalanceByUserId();
+        return RestResponse.ok(balanceResponse);
     }
     @GET
-    @Path("/investment/{userId}")
-    public RestResponse<InvestmentProjectionDTO> getMonthlyCdiDashboard(@PathParam("userId") Long userId) {
-        InvestmentProjectionDTO projectionDTO = investmentService.getProjectionBasedOnCdiRate(userId, Estimate.MONTHLY);
+    @Path("/investment")
+    public RestResponse<InvestmentProjectionDTO> getMonthlyCdiDashboard() {
+        InvestmentProjectionDTO projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
         return RestResponse.ok(projectionDTO);
     }
     @GET
-    @Path("/goal/{userId}")
-    public RestResponse<List<GoalProgressDTO>> getGoalsDashboard(@PathParam("userId") Long userId){
-        List<GoalProgressDTO> allGoals = analyticsService.analyzeAllGoalProgress(userId);
+    @Path("/goals")
+    public RestResponse<List<GoalProgressDTO>> getGoalsDashboard(){
+        List<GoalProgressDTO> allGoals = analyticsService.analyzeAllGoalProgress();
         return RestResponse.ok(allGoals);
     }
 }

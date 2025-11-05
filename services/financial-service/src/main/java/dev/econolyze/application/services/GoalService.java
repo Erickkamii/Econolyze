@@ -4,6 +4,7 @@ import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.application.mapper.FinancialGoalMapper;
+import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.FinancialGoal;
 import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.FinancialGoalRepository;
@@ -28,9 +29,13 @@ public class GoalService {
     AnalyticsService analyticsService;
     @Inject
     TransactionService transactionService;
+    @Inject
+    UserContext userContext;
 
     @Transactional
     public FinancialGoalDTO createNewGoal(FinancialGoalDTO goalDTO) {
+        Long userId = userContext.getUserId();
+        goalDTO.setUserId(userId);
         FinancialGoal goal = financialGoalMapper.mapToEntity(goalDTO);
         financialGoalRepository.persist(goal);
         return financialGoalMapper.mapToDTO(goal);
@@ -40,7 +45,8 @@ public class GoalService {
         return financialGoalMapper.mapToDTO(financialGoalRepository.findById(id));
     }
 
-    public GoalProgressDTO getGoalProgress(Long id, Long userId){
+    public GoalProgressDTO getGoalProgress(Long id){
+        Long userId = userContext.getUserId();
         FinancialGoalDTO financialGoalDTO = getGoalById(id);
         List<TransactionDTO> transactionDTO = transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME);
         BigDecimal incomesSum = transactionDTO.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);

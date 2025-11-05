@@ -14,7 +14,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 @Path("/api")
 @RegisterRestClient(configKey = "financial-service")
-@RegisterClientHeaders
+@RegisterClientHeaders(AuthHeaderFactory.class)
 public interface FinancialServiceClient {
 
     @POST
@@ -24,7 +24,7 @@ public interface FinancialServiceClient {
     @Timeout(5000)
     @Retry(maxRetries = 2)
     RestResponse<TransactionResponse> createTransaction(
-            @HeaderParam("X-User-Id") Long userId,
+            @HeaderParam("Authorization") String authorization,
             TransactionRequest transaction
     );
 
@@ -34,7 +34,19 @@ public interface FinancialServiceClient {
     @Timeout(5000)
     @Retry(maxRetries = 2)
     RestResponse<PagedResponse<TransactionResponse>> getTransactions(
-            @HeaderParam("X-User-Id") Long userId
+            @HeaderParam("Authorization") String authorization,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("pageSize") @DefaultValue("20") int pageSize
+    );
+
+    @GET
+    @Path("/transaction/type/{transactionType}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Timeout(5000)
+    @Retry(maxRetries = 2)
+    RestResponse<PagedResponse<TransactionResponse>> getTransactionsByType(
+            @HeaderParam("Authorization") String authorization,
+            @PathParam("transactionType") String transactionType
     );
 
     @GET
@@ -42,6 +54,26 @@ public interface FinancialServiceClient {
     @Produces(MediaType.APPLICATION_JSON)
     @Timeout(5000)
     RestResponse<BalanceResponse> getBalance(
-        @HeaderParam("X-User-Id") Long userId
+            @HeaderParam("Authorization") String authorization
+    );
+
+    @GET
+    @Path("/transaction/category/{category}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Timeout(5000)
+    @Retry(maxRetries = 2)
+    RestResponse<PagedResponse<TransactionResponse>> getTransactionsByCategory(
+            @HeaderParam("Authorization") String authorization,
+            @PathParam("category") String category
+    );
+
+    @GET
+    @Path("/transaction/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Timeout(5000)
+    @Retry(maxRetries = 2)
+    RestResponse<TransactionResponse> getTransactionById(
+            @HeaderParam("Authorization") String authorization,
+            @PathParam("id") Long id
     );
 }

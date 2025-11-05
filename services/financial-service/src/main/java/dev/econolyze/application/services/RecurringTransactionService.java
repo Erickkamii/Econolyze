@@ -3,6 +3,7 @@ package dev.econolyze.application.services;
 import dev.econolyze.application.dto.*;
 import dev.econolyze.application.mapper.RecurrencyTemplateMapper;
 import dev.econolyze.application.mapper.TransactionMapper;
+import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.RecurringTemplate;
 import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.RecurrenceFrequency;
@@ -28,6 +29,8 @@ public class RecurringTransactionService {
     RecurrencyTemplateMapper recurrencyTemplateMapper;
     @Inject
     TransactionMapper transactionMapper;
+    @Inject
+    UserContext userContext;
 
     @Transactional
     public RecurrencyTemplateDTO createRecurring(CreateRecurringRequest request) {
@@ -64,7 +67,7 @@ public class RecurringTransactionService {
 
         return new RecurrencyTemplateDTO(
                 null,
-                getCurrentUserId(),
+                userContext.getUserId(),
                 request.amount(),
                 request.type(),
                 request.category(),
@@ -81,7 +84,7 @@ public class RecurringTransactionService {
         );
     }
 
-    @Scheduled(cron = "0 0 1 * * ?") // 01:00 todo dia
+    @Scheduled(cron = "0 0 1 * * ?")
     @Transactional
     public void processRecurringTransactions() {
         LocalDate today = LocalDate.now();
@@ -180,7 +183,8 @@ public class RecurringTransactionService {
         recurrencyTemplateRepository.delete(template);
     }
 
-    public List<RecurrencyTemplateDTO> getAllTemplatesByUserId(Long userId) {
+    public List<RecurrencyTemplateDTO> getAllTemplatesByUserId() {
+        Long userId = userContext.getUserId();
         List<RecurringTemplate> templates = recurrencyTemplateRepository.findActiveByUserId(userId);
         return templates.stream()
                 .map(recurrencyTemplateMapper::mapToDTO)
@@ -330,8 +334,5 @@ public class RecurringTransactionService {
                 template.getIsActive()
         );
     }
-    // TODO: Implementar com SecurityContext/JWT
-    private Long getCurrentUserId() {
-        return 1L; // mock por enquanto
-    }
+
 }

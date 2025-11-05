@@ -21,8 +21,8 @@ public class RecurringTemplateResource {
     }
 
     @GET
-    public RestResponse<List<RecurrencyTemplateDTO>> listActiveRecurrencyTemplates(@HeaderParam("X-User-Id") Long userId) {
-        List<RecurrencyTemplateDTO> templates = recurringTransactionService.getAllTemplatesByUserId(userId);
+    public RestResponse<List<RecurrencyTemplateDTO>> listActiveRecurrencyTemplates() {
+        List<RecurrencyTemplateDTO> templates = recurringTransactionService.getAllTemplatesByUserId();
         return RestResponse.ok(templates);
     }
 

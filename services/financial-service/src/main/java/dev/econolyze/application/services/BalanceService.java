@@ -1,9 +1,10 @@
 package dev.econolyze.application.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.econolyze.application.dto.BalanceDTO;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.response.BalanceResponse;
 import dev.econolyze.application.mapper.BalanceMapper;
+import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.Balance;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,18 +26,19 @@ public class BalanceService {
     BalanceMapper balanceMapper;
     @Inject
     TransactionService transactionService;
+    @Inject
+    UserContext userContext;
 
     @Transactional
-    public BalanceDTO getBalanceByUserId(Long userId){
-        Balance balance = balanceRepository.findById(userId);
-        return BalanceDTO.builder()
-                .userId(balance.getUserId())
-                .balance(balance.getBalance())
-                .date(balance.getDate())
-                .balanceDifference(setBalanceDifference(balanceMapper.mapToDTO(balance)))
-                .income(balance.getIncome())
-                .expenses(balance.getExpenses())
-                .build();
+    public BalanceResponse getBalanceByUserId(){
+        Long userId = userContext.getUserId();
+        Balance balance = balanceRepository.findByUserIdForUpdate(userId);
+        return new BalanceResponse(
+                balance.getBalance(),
+                balance.getDate(),
+                balance.getIncome(),
+                balance.getExpenses(),
+                setBalanceDifference(balanceMapper.mapToDTO(balance)));
     }
 
     public BigDecimal setBalanceDifference(BalanceDTO balanceDTO){
