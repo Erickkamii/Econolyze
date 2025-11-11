@@ -1,8 +1,9 @@
 package dev.econolyze.interfaces.resource;
 
-import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.InvestmentProjectionDTO;
+import dev.econolyze.application.dto.request.FinancialGoalRequest;
+import dev.econolyze.application.dto.response.FinancialGoalResponse;
 import dev.econolyze.application.services.GoalService;
 import dev.econolyze.application.services.InvestmentService;
 import dev.econolyze.domain.enums.Estimate;
@@ -24,8 +25,8 @@ public class GoalResource {
     InvestmentProjectionDTO projectionDTO;
 
     @POST
-    public RestResponse<FinancialGoalDTO> createNewGoal(FinancialGoalDTO goalDTO) {
-        FinancialGoalDTO createdGoal = goalService.createNewGoal(goalDTO);
+    public RestResponse<FinancialGoalResponse> createNewGoal(FinancialGoalRequest request) {
+        FinancialGoalResponse createdGoal = goalService.createNewGoal(request);
         return RestResponse.ok(createdGoal);
     }
 
@@ -37,8 +38,8 @@ public class GoalResource {
 
     @GET
     @Path("/{goalId}")
-    public RestResponse<FinancialGoalDTO> getGoalById(@PathParam("goalId") Long goalId) {
-        FinancialGoalDTO goalDTO = goalService.getGoalById(goalId);
+    public RestResponse<FinancialGoalResponse> getGoalById(@PathParam("goalId") Long goalId) {
+        FinancialGoalResponse goalDTO = goalService.getGoalById(goalId);
         return RestResponse.ok(goalDTO);
     }
 

@@ -1,6 +1,6 @@
 package dev.econolyze.mapper;
 
-import dev.econolyze.dto.ErrorResponse;
+import dev.econolyze.dto.response.ErrorResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Context;

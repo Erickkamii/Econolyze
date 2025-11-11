@@ -1,6 +1,6 @@
 package dev.econolyze.client;
 
-import dev.econolyze.dto.BalanceResponse;
+import dev.econolyze.dto.response.BalanceResponse;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;

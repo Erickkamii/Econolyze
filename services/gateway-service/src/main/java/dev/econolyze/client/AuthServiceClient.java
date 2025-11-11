@@ -1,13 +1,14 @@
 package dev.econolyze.client;
 
-import dev.econolyze.dto.LoginRequest;
-import dev.econolyze.dto.LoginResponse;
-import dev.econolyze.dto.RegisterRequest;
+import dev.econolyze.dto.request.LoginRequest;
+import dev.econolyze.dto.response.LoginResponse;
+import dev.econolyze.dto.request.RegisterRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.HeaderParam;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -31,12 +32,12 @@ public interface AuthServiceClient {
     @Produces(MediaType.APPLICATION_JSON)
     @Timeout(5000)
     @Retry(maxRetries = 2, delay = 1000)
-    RestResponse<LoginResponse> register(RegisterRequest request);
+    RestResponse<String> register(RegisterRequest request);
 
     @POST
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Timeout(3000)
-    RestResponse<LoginResponse> refresh(String token);
+    RestResponse<LoginResponse> refresh(@HeaderParam("Authorization") String token);
 }

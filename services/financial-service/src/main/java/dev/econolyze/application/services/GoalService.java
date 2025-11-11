@@ -3,6 +3,8 @@ package dev.econolyze.application.services;
 import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.request.FinancialGoalRequest;
+import dev.econolyze.application.dto.response.FinancialGoalResponse;
 import dev.econolyze.application.mapper.FinancialGoalMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.FinancialGoal;
@@ -33,24 +35,40 @@ public class GoalService {
     UserContext userContext;
 
     @Transactional
-    public FinancialGoalDTO createNewGoal(FinancialGoalDTO goalDTO) {
-        Long userId = userContext.getUserId();
-        goalDTO.setUserId(userId);
-        FinancialGoal goal = financialGoalMapper.mapToEntity(goalDTO);
+    public FinancialGoalResponse createNewGoal(FinancialGoalRequest request) {
+        FinancialGoal goal = financialGoalMapper.mapToEntity(dtoBuilder(request));
         financialGoalRepository.persist(goal);
-        return financialGoalMapper.mapToDTO(goal);
+        return financialGoalMapper.mapToResponse(goal);
     }
 
-    public FinancialGoalDTO getGoalById(Long id){
-        return financialGoalMapper.mapToDTO(financialGoalRepository.findById(id));
+    public FinancialGoalResponse getGoalById(Long id){
+        return financialGoalMapper.mapToResponse(financialGoalRepository.findById(id));
     }
 
     public GoalProgressDTO getGoalProgress(Long id){
         Long userId = userContext.getUserId();
-        FinancialGoalDTO financialGoalDTO = getGoalById(id);
-        List<TransactionDTO> transactionDTO = transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME);
+        FinancialGoalDTO financialGoalDTO = financialGoalMapper.mapToDTO(getGoalById(id));
+        List<TransactionDTO> transactionDTO = removeIfNotMatch(transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME), financialGoalDTO.getId());
         BigDecimal incomesSum = transactionDTO.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return analyticsService.analyzeGoalProgress(financialGoalDTO, incomesSum);
+    }
+
+    private List<TransactionDTO> removeIfNotMatch(List<TransactionDTO> transactionDTOS, Long goalId){
+        return transactionDTOS.stream()
+                .filter(t -> t.getFinancialGoalId().equals(goalId))
+                .toList();
+    }
+
+    private FinancialGoalDTO dtoBuilder(FinancialGoalRequest request) {
+        Long userId = userContext.getUserId();
+        return FinancialGoalDTO.builder()
+                .name(request.name())
+                .userId(userId)
+                .amount(request.amount())
+                .description(request.description())
+                .type(request.type())
+                .status(request.status())
+                .build();
     }
 
 }

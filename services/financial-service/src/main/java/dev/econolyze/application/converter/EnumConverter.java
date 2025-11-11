@@ -1,9 +1,6 @@
 package dev.econolyze.application.converter;
 
-import dev.econolyze.domain.enums.Category;
-import dev.econolyze.domain.enums.GoalType;
-import dev.econolyze.domain.enums.PaymentMethod;
-import dev.econolyze.domain.enums.TransactionType;
+import dev.econolyze.domain.enums.*;
 
 public class EnumConverter {
     public static Category toCategory(int code) {
@@ -30,4 +27,8 @@ public class EnumConverter {
     public static int toCode(GoalType goalType) {
         return goalType.getCode();
     }
+    public static PaymentStatus toPaymentStatus(int status) {return PaymentStatus.fromCode(status);}
+    public static int toCode(PaymentStatus paymentStatus) {return paymentStatus.getCode();}
+    public static TransactionStatus toTransactionStatus(int status) {return TransactionStatus.fromCode(status);}
+    public static int toCode(TransactionStatus transactionStatus) {return transactionStatus.getCode();}
 }

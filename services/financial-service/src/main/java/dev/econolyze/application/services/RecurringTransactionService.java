@@ -1,6 +1,11 @@
 package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.*;
+import dev.econolyze.application.dto.request.CreateRecurringRequest;
+import dev.econolyze.application.dto.request.UpdateRecurringRequest;
+import dev.econolyze.application.dto.response.RecurrencySummaryResponse;
+import dev.econolyze.application.dto.response.RecurringTemplateResponse;
+import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.mapper.RecurrencyTemplateMapper;
 import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.application.security.UserContext;
@@ -33,13 +38,13 @@ public class RecurringTransactionService {
     UserContext userContext;
 
     @Transactional
-    public RecurrencyTemplateDTO createRecurring(CreateRecurringRequest request) {
+    public RecurringTemplateResponse createRecurring(CreateRecurringRequest request) {
         RecurrencyTemplateDTO dto = mapRequestToDTO(request);
         return createRecurringFromDTO(dto);
     }
 
     @Transactional
-    public RecurrencyTemplateDTO createRecurringFromDTO(RecurrencyTemplateDTO dto) {
+    public RecurringTemplateResponse createRecurringFromDTO(RecurrencyTemplateDTO dto) {
         RecurringTemplate template = RecurringTemplate.builder()
                 .userId(dto.userId())
                 .amount(dto.amount())
@@ -57,7 +62,7 @@ public class RecurringTransactionService {
                 .build();
 
         recurrencyTemplateRepository.persist(template);
-        return recurrencyTemplateMapper.mapToDTO(template);
+        return recurrencyTemplateMapper.mapToResponse(template);
     }
 
     private RecurrencyTemplateDTO mapRequestToDTO(CreateRecurringRequest request) {
@@ -140,7 +145,7 @@ public class RecurringTransactionService {
     }
 
     @Transactional
-    public RecurrencyTemplateDTO updateTemplate(Long templateId, UpdateRecurringRequest request) {
+    public RecurringTemplateResponse updateTemplate(Long templateId, UpdateRecurringRequest request) {
         RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
 
@@ -153,8 +158,8 @@ public class RecurringTransactionService {
         if (request.category() != null) {
             template.setCategory(request.category());
         }
-        if (request.paymentMethod() != null) {
-            template.setMethod(request.paymentMethod());
+        if (request.method() != null) {
+            template.setMethod(request.method());
         }
         if (request.endDate() != null) {
             template.setEndDate(request.endDate());
@@ -163,16 +168,16 @@ public class RecurringTransactionService {
             template.setMaxOccurrences(request.maxOccurrences());
         }
 
-        return recurrencyTemplateMapper.mapToDTO(template);
+        return recurrencyTemplateMapper.mapToResponse(template);
     }
 
     @Transactional
-    public RecurrencyTemplateDTO toggleActive(Long templateId) {
+    public RecurringTemplateResponse toggleActive(Long templateId) {
         RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
 
         template.setIsActive(!template.getIsActive());
-        return recurrencyTemplateMapper.mapToDTO(template);
+        return recurrencyTemplateMapper.mapToResponse(template);
     }
 
     @Transactional
@@ -183,20 +188,20 @@ public class RecurringTransactionService {
         recurrencyTemplateRepository.delete(template);
     }
 
-    public List<RecurrencyTemplateDTO> getAllTemplatesByUserId() {
+    public List<RecurringTemplateResponse> getAllTemplatesByUserId() {
         Long userId = userContext.getUserId();
         List<RecurringTemplate> templates = recurrencyTemplateRepository.findActiveByUserId(userId);
         return templates.stream()
-                .map(recurrencyTemplateMapper::mapToDTO)
+                .map(recurrencyTemplateMapper::mapToResponse)
                 .toList();
     }
 
-    public PagedResponse<TransactionDTO> getTransactionHistory(Long templateId, int page, int pageSize) {
+    public PagedResponse<TransactionResponse> getTransactionHistory(Long templateId, int page, int pageSize) {
         return PagedResponse.fromPanacheQuery(
                 transactionRepository.findPagedByRecurringTemplateId(templateId, page, pageSize),
                 page,
                 pageSize,
-                transactionMapper::mapToDTO
+                transactionMapper::mapToResponse
         );
     }
 
@@ -298,14 +303,14 @@ public class RecurringTransactionService {
         };
     }
 
-    public RecurrencyTemplateDTO getTemplateById(Long templateId) {
+    public RecurringTemplateResponse getTemplateById(Long templateId) {
         RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
 
-        return recurrencyTemplateMapper.mapToDTO(template);
+        return recurrencyTemplateMapper.mapToResponse(template);
     }
 
-    public RecurrencySummaryDTO getRecurrencySummary(Long templateId) {
+    public RecurrencySummaryResponse getRecurrencySummary(Long templateId) {
         RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
 
@@ -319,7 +324,7 @@ public class RecurringTransactionService {
         BigDecimal paidAmount = template.getAmount().multiply(new BigDecimal(timesProcessed));
         BigDecimal remainingAmount = template.getAmount().multiply(new BigDecimal(remaining));
 
-        return new RecurrencySummaryDTO(
+        return new RecurrencySummaryResponse(
                 template.getId(),
                 template.getAmount(),
                 template.getFrequency(),

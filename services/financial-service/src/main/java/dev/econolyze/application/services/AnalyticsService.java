@@ -33,8 +33,9 @@ public class AnalyticsService {
         GoalProgressDTO goalProgressDTO = new GoalProgressDTO();
         goalProgressDTO.setId(financialGoal.getId());
         goalProgressDTO.setName(financialGoal.getName());
+        // Use a reasonable scale to preserve fractional progress (e.g., 10 decimal places)
         goalProgressDTO.setProgress(incomesSum
-                .divide(financialGoal.getAmount(), RoundingMode.HALF_UP)
+                .divide(financialGoal.getAmount(), 10, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100)).doubleValue());
         return goalProgressDTO;
     }

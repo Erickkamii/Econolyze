@@ -2,6 +2,7 @@ package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.PagedResponse;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.request.TransactionRequest;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.mapper.BalanceMapper;
 import dev.econolyze.application.mapper.TransactionMapper;
@@ -50,7 +51,8 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse saveTransaction(TransactionDTO transactionDTO) {
+    public TransactionResponse saveTransaction(TransactionRequest request) {
+        TransactionDTO transactionDTO = transactionMapper.mapToDTO(request);
         transactionDTO.setUserId(userContext.getUserId());
         Transaction transaction = transactionMapper.mapToEntity(transactionDTO);
         balanceService.updateUserBalance(transactionDTO, transaction.getUserId());

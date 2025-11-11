@@ -69,7 +69,6 @@ public class UserManager {
             throw new IllegalArgumentException("Usuário ou senha inválidos");
         }
         return LoginResponseDTO.builder()
-                .userId(user.id)
                 .username(username)
                 .refreshToken(TokenGenerator.generateRefreshToken(user.id, username))
                 .authToken(TokenGenerator.generate(user.id, user.getUsername(),user.getRoles()))
@@ -96,7 +95,6 @@ public class UserManager {
 
             return LoginResponseDTO.builder()
                     .username(user.getUsername())
-                    .userId(user.id)
                     .authToken(TokenGenerator.generate(user.id, user.getUsername(), user.getRoles()))
                     .refreshToken(TokenGenerator.generateRefreshToken(user.id, user.getUsername()))
                     .build();

@@ -1,9 +1,9 @@
 package dev.econolyze.resource;
 
 import dev.econolyze.client.AuthServiceClient;
-import dev.econolyze.dto.LoginRequest;
-import dev.econolyze.dto.LoginResponse;
-import dev.econolyze.dto.RegisterRequest;
+import dev.econolyze.dto.request.LoginRequest;
+import dev.econolyze.dto.response.LoginResponse;
+import dev.econolyze.dto.request.RegisterRequest;
 import dev.econolyze.exception.ServiceUnavailableException;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
@@ -48,7 +48,7 @@ public class AuthServiceResource {
         logger.infof("Register attempt: %s", request.username());
 
         try{
-            RestResponse<LoginResponse> response = authServiceClient.register(request);
+            RestResponse<String> response = authServiceClient.register(request);
             if (response.getStatus() == RestResponse.Status.CONFLICT.getStatusCode()) {
                 throw new WebApplicationException("Username already exists", 409);
             }

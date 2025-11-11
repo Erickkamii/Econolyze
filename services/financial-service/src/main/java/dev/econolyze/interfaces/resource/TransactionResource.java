@@ -1,7 +1,7 @@
 package dev.econolyze.interfaces.resource;
 
 import dev.econolyze.application.dto.PagedResponse;
-import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.request.TransactionRequest;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.services.TransactionService;
 import dev.econolyze.domain.enums.Category;
@@ -16,9 +16,9 @@ public class TransactionResource {
     @Inject
     TransactionService transactionService;
     @POST
-    public RestResponse<TransactionResponse> addTransaction(TransactionDTO transactionDto) {
-        TransactionResponse transactionDTO = transactionService.saveTransaction(transactionDto);
-        return RestResponse.ok(transactionDTO);
+    public RestResponse<TransactionResponse> addTransaction(TransactionRequest request) {
+        TransactionResponse response = transactionService.saveTransaction(request);
+        return RestResponse.ok(response);
     }
     @GET
     public RestResponse<PagedResponse<TransactionResponse>> getAllTransactionsByUserId(@QueryParam("page") @DefaultValue("0") int page,

@@ -18,14 +18,14 @@ import java.time.LocalDate;
 public class TransactionDTO {
     private Long id;
     private BigDecimal amount;
+    private BigDecimal paidAmount;
     private Long userId;
     private Category category;
     private TransactionType type;
     private String description;
     private LocalDate date;
     private PaymentMethod method;
-    private Integer financialGoalId;
+    private Long financialGoalId;
     private Boolean isRecurring;
     private Long recurringTemplateId;
-
 }

@@ -1,6 +1,6 @@
 package dev.econolyze.mapper;
 
-import dev.econolyze.dto.ErrorResponse;
+import dev.econolyze.dto.response.ErrorResponse;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import org.jboss.logging.Logger;

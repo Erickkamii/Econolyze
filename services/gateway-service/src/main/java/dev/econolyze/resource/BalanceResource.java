@@ -1,7 +1,7 @@
 package dev.econolyze.resource;
 
 import dev.econolyze.client.BalanceClient;
-import dev.econolyze.dto.BalanceResponse;
+import dev.econolyze.dto.response.BalanceResponse;
 import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
@@ -18,7 +18,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 @Path("/api/account")
 @Authenticated
 public class BalanceResource {
-    private static final Logger LOG = Logger.getLogger(FinancialServiceResource.class);
+    private static final Logger LOG = Logger.getLogger(TransactionResource.class);
 
     @Inject
     @RestClient
@@ -35,8 +35,6 @@ public class BalanceResource {
             LOG.warn("JWT inválido: claim userId ausente");
             return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
         }
-
-        Long userId = userIdClaim.longValueExact();
 
         try {
             return balanceClient.getBalance(authorization);
