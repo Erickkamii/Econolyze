@@ -5,11 +5,14 @@ import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.application.dto.request.TransactionRequest;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.mapper.BalanceMapper;
+import dev.econolyze.application.mapper.PaymentMapper;
 import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.Balance;
+import dev.econolyze.domain.entity.Payment;
 import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.Category;
+import dev.econolyze.domain.enums.PaymentStatus;
 import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.BalanceRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
@@ -40,6 +43,10 @@ public class TransactionService {
     BalanceMapper balanceMapper;
     @Inject
     UserContext userContext;
+    @Inject
+    PaymentMapper paymentMapper;
+    @Inject
+    AccountService accountService;
 
     public PagedResponse<TransactionResponse> getAllTransactionsByUserId(int page, int pageSize) {
         Long userId = userContext.getUserId();
@@ -55,8 +62,34 @@ public class TransactionService {
         TransactionDTO transactionDTO = transactionMapper.mapToDTO(request);
         transactionDTO.setUserId(userContext.getUserId());
         Transaction transaction = transactionMapper.mapToEntity(transactionDTO);
-        balanceService.updateUserBalance(transactionDTO, transaction.getUserId());
+        if (request.hasInitialPayment()){
+            Payment initialPayment = Payment.builder()
+                    .accountId(request.accountId())
+                    .transaction(transaction)
+                    .amount(request.initialPayment())
+                    .method(request.method())
+                    .paidAt(LocalDate.now())
+                    .status(PaymentStatus.COMPLETED)
+                    .build();
+            transaction.getPayments().add(initialPayment);
+            accountService.updateAccountBalance(initialPayment);
+        }else {
+            Payment p = Payment.builder()
+                    .transaction(transaction)
+                    .amount(request.amount())
+                    .method(request.method())
+                    .paidAt(LocalDate.now())
+                    .accountId(request.accountId())
+                    .status(PaymentStatus.COMPLETED)
+                    .build();
+
+            transaction.getPayments().add(p);
+            accountService.updateAccountBalance(p);
+        }
+        transaction.recalculateStatus();
         transactionRepository.persist(transaction);
+        if (request.accountId() != null){
+        }
         return transactionMapper.mapToResponse(transaction);
     }
 
@@ -94,16 +127,6 @@ public class TransactionService {
         return transactionRepository.findAllTransactionsByUserIdAndType(userId, type).stream()
                 .map(transactionMapper::mapToDTO)
                 .toList();
-    }
-
-    Balance newBalance(Long userId){
-        return Balance.builder()
-                .userId(userId)
-                .balance(BigDecimal.ZERO)
-                .date(LocalDate.now())
-                .income(BigDecimal.ZERO)
-                .expenses(BigDecimal.ZERO)
-                .build();
     }
 
     public TransactionResponse getTransactionById(Long id) {

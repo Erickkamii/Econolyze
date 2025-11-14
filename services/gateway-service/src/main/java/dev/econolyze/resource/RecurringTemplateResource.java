@@ -53,9 +53,10 @@ public class RecurringTemplateResource {
     }
 
     @PUT
-    @Path("/recurring")
+    @Path("/recurring/{templateId}")
     public RestResponse<RecurringTemplateResponse> updateRecurring(@Context HttpHeaders headers,
-                                                                   UpdateRecurringRequest request)
+                                                                   UpdateRecurringRequest request,
+                                                                   @PathParam("templateId") Long templateId)
     {
         JsonNumber userIdClaim = jwt.getClaim("userId");
         String authorization = headers.getHeaderString("Authorization");
@@ -63,7 +64,7 @@ public class RecurringTemplateResource {
             throw new ServiceUnavailableException("financial-service");
         }
         try {
-            return recurrencyClient.updateRecurringTemplate(authorization, request.id(), request);
+            return recurrencyClient.updateRecurringTemplate(authorization, templateId, request);
             } catch (Exception e) {
             LOG.errorf("Erro ao criar transação: %s", e.getMessage());
             throw new ServiceUnavailableException("financial-service", e);

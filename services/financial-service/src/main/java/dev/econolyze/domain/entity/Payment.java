@@ -23,6 +23,8 @@ public class Payment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "transaction_id", nullable = false)
     private Transaction transaction;
+    @Column(name = "account_id")
+    private Long accountId;
     private BigDecimal amount;
     private PaymentMethod method;
     @Column(name = "paid_at")
@@ -35,6 +37,12 @@ public class Payment {
     public void updateTransaction(){
         if (transaction != null){
             transaction.recalculateStatus();
+        }
+        if(paidAt == null){
+            paidAt = LocalDate.now();
+        }
+        if(status == null){
+            status = PaymentStatus.COMPLETED;
         }
     }
 }

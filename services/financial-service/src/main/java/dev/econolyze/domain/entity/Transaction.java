@@ -25,6 +25,8 @@ public class Transaction {
     private Long userId;
     @Column(name = "financialGoalId")
     private Long financialGoalId;
+    @Column(name = "account_id")
+    private Long accountId;
     @Column(name = "category")
     private Category category;
     @Column(name = "type")
@@ -67,16 +69,21 @@ public class Transaction {
     }
 
     public void recalculateStatus() {
+
+        if (status == TransactionStatus.CANCELLED)
+            return;
+
+
         BigDecimal totalPaid = payments.stream()
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalPaid.compareTo(amount) == 0) {
-            status = TransactionStatus.PAID;
-        } else if (totalPaid.compareTo(BigDecimal.ZERO) > 0) {
-            status = TransactionStatus.PAID_PARTIALLY;
-        } else {
+        if (totalPaid.compareTo(BigDecimal.ZERO) == 0) {
             status = TransactionStatus.PENDING;
+        } else if (totalPaid.compareTo(amount) >= 0) {
+            status = TransactionStatus.PAID;
+        } else {
+            status = TransactionStatus.PAID_PARTIALLY;
         }
     }
 
