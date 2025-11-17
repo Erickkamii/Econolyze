@@ -1,19 +1,31 @@
 package dev.econolyze.dto.request;
 
+import jakarta.validation.constraints.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record TransactionRequest(
-        Long id,
+
+        @NotNull(message = "Amount is required")
+        @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
         BigDecimal amount,
-        Long userId,
+        @NotNull(message = "Category is required")
         String category,
+        @NotNull(message = "Type is required")
         String type,
-        String description,
+        @NotNull(message = "Date is required")
         LocalDate date,
-        String method,
-        Integer financialGoalId,
+        @Size(max = 500, message = "Description cannot exceed 500 characters")
+        String description,
+        Long accountId,
+        Long financialGoalId,
+        Long recurringTemplateId,
         Boolean isRecurring,
-        Long recurringTemplateId
+
+        String method,
+
+        @DecimalMin(value = "0.00", message = "Initial payment cannot be negative")
+        BigDecimal initialPayment
 ) {
 }

@@ -3,7 +3,6 @@ package dev.econolyze.application.services;
 import dev.econolyze.application.dto.request.PaymentRequest;
 import dev.econolyze.application.dto.response.PaymentResponse;
 import dev.econolyze.application.mapper.PaymentMapper;
-import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.Payment;
 import dev.econolyze.domain.entity.Transaction;
@@ -28,8 +27,6 @@ public class PaymentService {
     TransactionRepository transactionRepository;
     @Inject
     PaymentMapper paymentMapper;
-    @Inject
-    TransactionMapper transactionMapper;
     @Inject
     UserContext userContext;
     @Inject

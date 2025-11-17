@@ -2,7 +2,6 @@ package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.AccountDTO;
 import dev.econolyze.application.dto.BalanceDTO;
-import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.application.dto.response.BalanceResponse;
 import dev.econolyze.application.mapper.BalanceMapper;
 import dev.econolyze.application.security.UserContext;
