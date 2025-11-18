@@ -11,7 +11,6 @@ import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.PaymentStatus;
 import dev.econolyze.domain.enums.TransactionType;
-import dev.econolyze.infrastructure.repository.BalanceRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

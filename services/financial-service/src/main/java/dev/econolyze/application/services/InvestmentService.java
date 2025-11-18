@@ -2,6 +2,8 @@ package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.InvestmentProjectionDTO;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
+import dev.econolyze.application.mapper.InvestmentMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.enums.Estimate;
 import dev.econolyze.domain.enums.TransactionType;
@@ -21,8 +23,10 @@ public class InvestmentService {
     TransactionService transactionService;
     @Inject
     UserContext userContext;
+    @Inject
+    InvestmentMapper investmentMapper;
 
-    public InvestmentProjectionDTO getProjectionBasedOnCdiRate(Estimate rate) {
+    public InvestmentProjectionResponse getProjectionBasedOnCdiRate(Estimate rate) {
         Long userId = userContext.getUserId();
         List<TransactionDTO> incomes = transactionService.getTransactionByUserIdAndType(userId, TransactionType.INVESTMENT);
         if(!incomes.isEmpty()){
@@ -40,20 +44,21 @@ public class InvestmentService {
                 BigDecimal cdiDailyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(cdiAnnualRate).doubleValue(), 1.0 / 252) - 1);
                 projection.setAmountCdi(projection.getAmountCdi().multiply(BigDecimal.ONE.add(cdiDailyRate)).setScale(2, RoundingMode.HALF_UP));
             }
-            return projection;
+            return investmentMapper.mapToResponse(projection);
         }
-        return InvestmentProjectionDTO.builder()
+        return investmentMapper.mapToResponse(InvestmentProjectionDTO.builder()
                 .userId(userId)
                 .amountBlank(BigDecimal.ZERO)
                 .amountCdi(BigDecimal.ZERO)
                 .date(LocalDate.now())
                 .category("Investment")
                 .description("No Investment registered")
-                .build();
+                .build());
     }
 
-    public InvestmentProjectionDTO getProjectionBasedOnCdiWithPercentage(Estimate rate, BigDecimal percentage){
-        InvestmentProjectionDTO projection = getProjectionBasedOnCdiRate(rate);
+    public InvestmentProjectionResponse getProjectionBasedOnCdiWithPercentage(Estimate rate, BigDecimal percentage){
+        InvestmentProjectionResponse response = getProjectionBasedOnCdiRate(rate);
+        InvestmentProjectionDTO projection = investmentMapper.mapToDTO(response);
         if(projection.getAmountCdi() != null){
             BigDecimal factor = percentage.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP);
             projection.setAmountCdi(projection.getAmountBlank()
@@ -66,7 +71,7 @@ public class InvestmentService {
                     ).setScale(2, RoundingMode.HALF_EVEN));
             projection.setDescription("CDI Investment in " + rate + " rate with " + percentage + " %");
         }
-        return projection;
+        return investmentMapper.mapToResponse(projection);
     }
     
     private InvestmentProjectionDTO initializeProjection(List<TransactionDTO> incomes, Long userId){

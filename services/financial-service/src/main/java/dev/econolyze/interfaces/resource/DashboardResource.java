@@ -1,8 +1,8 @@
 package dev.econolyze.interfaces.resource;
 
 import dev.econolyze.application.dto.GoalProgressDTO;
-import dev.econolyze.application.dto.InvestmentProjectionDTO;
 import dev.econolyze.application.dto.response.BalanceResponse;
+import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
 import dev.econolyze.application.services.AnalyticsService;
 import dev.econolyze.application.services.BalanceService;
 import dev.econolyze.application.services.InvestmentService;
@@ -29,8 +29,8 @@ public class DashboardResource {
     }
     @GET
     @Path("/investment")
-    public RestResponse<InvestmentProjectionDTO> getMonthlyCdiDashboard() {
-        InvestmentProjectionDTO projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
+    public RestResponse<InvestmentProjectionResponse> getMonthlyCdiDashboard() {
+        InvestmentProjectionResponse projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
         return RestResponse.ok(projectionDTO);
     }
     @GET

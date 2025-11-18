@@ -1,9 +1,9 @@
 package dev.econolyze.interfaces.resource;
 
 import dev.econolyze.application.dto.GoalProgressDTO;
-import dev.econolyze.application.dto.InvestmentProjectionDTO;
 import dev.econolyze.application.dto.request.FinancialGoalRequest;
 import dev.econolyze.application.dto.response.FinancialGoalResponse;
+import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
 import dev.econolyze.application.services.GoalService;
 import dev.econolyze.application.services.InvestmentService;
 import dev.econolyze.domain.enums.Estimate;
@@ -22,7 +22,7 @@ public class GoalResource {
     @Inject
     InvestmentService investmentService;
 
-    InvestmentProjectionDTO projectionDTO;
+    InvestmentProjectionResponse projectionDTO;
 
     @POST
     public RestResponse<FinancialGoalResponse> createNewGoal(FinancialGoalRequest request) {
@@ -52,7 +52,7 @@ public class GoalResource {
 
     @GET
     @Path("/annual-cdi")
-    public RestResponse<InvestmentProjectionDTO> getAnnualInvestmentProgress(                                                                             @RestQuery("percentage") BigDecimal percentage){
+    public RestResponse<InvestmentProjectionResponse> getAnnualInvestmentProgress(@RestQuery("percentage") BigDecimal percentage){
         if ( percentage == null)
             projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.YEARLY);
         else
@@ -62,7 +62,7 @@ public class GoalResource {
 
     @GET
     @Path("/monthly-cdi")
-    public RestResponse<InvestmentProjectionDTO> getMonthlyInvestmentProgress(
+    public RestResponse<InvestmentProjectionResponse> getMonthlyInvestmentProgress(
                                                                               @RestQuery("percentage") BigDecimal percentage) {
         if ( percentage == null)
             projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
@@ -73,7 +73,7 @@ public class GoalResource {
 
     @GET
     @Path("/daily-cdi")
-    public RestResponse<InvestmentProjectionDTO> getDailyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
+    public RestResponse<InvestmentProjectionResponse> getDailyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
         if(percentage == null)
             projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.DAILY);
         else

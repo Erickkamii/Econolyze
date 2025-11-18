@@ -14,7 +14,7 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.reactive.RestResponse;
 
-@Path("/auth/")
+@Path("/auth")
 @RegisterRestClient(configKey = "auth-service")
 public interface AuthServiceClient {
 
