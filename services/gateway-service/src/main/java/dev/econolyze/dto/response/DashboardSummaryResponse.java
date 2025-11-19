@@ -1,8 +1,9 @@
 package dev.econolyze.dto.response;
 
+import java.util.List;
+
 public record DashboardSummaryResponse(
-    Long id,
-    Long income,
-    Long expenses,
-    Long balance
+    BalanceResponse balance,
+    InvestmentProjectionResponse investment,
+    List<GoalProgressResponse> goals
 ) {}
