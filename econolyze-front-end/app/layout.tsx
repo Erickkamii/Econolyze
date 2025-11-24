@@ -2,13 +2,13 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { AuthProvider } from "@/context/AuthContext"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
   title: "Econolyze - Gestão Financeira Pessoal",
   description: "Sistema moderno de gestão financeira pessoal",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -36,8 +36,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
-        {/* Analytics component was removed due to causing an error */}
+      <AuthProvider>
+          {children}
+      </AuthProvider>        {/* Analytics component was removed due to causing an error */}
       </body>
     </html>
   )
