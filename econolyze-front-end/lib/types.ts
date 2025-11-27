@@ -20,6 +20,17 @@ export type LoginResponse = {
   // user?: User;
 };
 
+export type RegisterRequest = {
+    username: string;
+    email: string;
+    password: string;
+}
+
+export type RegisterResponse = {
+    message: string;
+    username: string
+};
+
 export type RefreshRequest = {
   refreshToken: string;
 };

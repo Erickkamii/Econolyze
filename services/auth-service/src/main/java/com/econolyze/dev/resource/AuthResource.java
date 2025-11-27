@@ -3,6 +3,7 @@ package com.econolyze.dev.resource;
 import com.econolyze.dev.dto.LoginRequestDTO;
 import com.econolyze.dev.dto.LoginResponseDTO;
 import com.econolyze.dev.dto.RegisterRequestDTO;
+import com.econolyze.dev.dto.RegisterResponse;
 import com.econolyze.dev.entity.User;
 import com.econolyze.dev.exception.InvalidTokenException;
 import com.econolyze.dev.exception.WrongCredentialsException;
@@ -30,14 +31,16 @@ public class AuthResource {
     @POST
     @Path("/register")
     @PermitAll
-    public RestResponse<String> register(@Valid RegisterRequestDTO dto) {
+    public RestResponse<RegisterResponse> register(@Valid RegisterRequestDTO dto) {
         User user = new User();
         user.setUsername(dto.username);
         user.setEmail(dto.email);
         user.setPassword(dto.password);
 
         UserManager.addUser(user);
-        return RestResponse.ok("Seja bem vindo ao Econolyze! "+ user.getUsername());
+        return RestResponse.ok( new RegisterResponse(
+                "Seja bem vindo ao Econolyze! ",
+                user.getUsername()));
     }
 
     @GET

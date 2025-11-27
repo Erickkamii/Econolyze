@@ -13,7 +13,6 @@ export default function CarteiraPage() {
         </div>
 
         <SaldoCard saldo={15847.32} />
-
         <AcoesRapidas />
 
         <UltimasTransacoes />

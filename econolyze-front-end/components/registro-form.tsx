@@ -1,87 +1,124 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import type { RegisterRequest } from "@/lib/types";
+import {toast} from "sonner";
 
 export function RegistroForm() {
-  const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    senha: "",
-    confirmarSenha: "",
-  })
+    const router = useRouter();
+    const { register } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Registro:", formData)
-  }
+    const [form, setForm] = useState<RegisterRequest>({
+        username: "",
+        email: "",
+        password: "",
+    });
 
-  return (
-    <Card className="border-border/50">
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome</Label>
-            <Input
-              id="nome"
-              type="text"
-              placeholder="Seu nome completo"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-          <div className="space-y-2">
-            <Label htmlFor="senha">Senha</Label>
-            <Input
-              id="senha"
-              type="password"
-              placeholder="••••••••"
-              value={formData.senha}
-              onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmar-senha">Confirmar Senha</Label>
-            <Input
-              id="confirmar-senha"
-              type="password"
-              placeholder="••••••••"
-              value={formData.confirmarSenha}
-              onChange={(e) => setFormData({ ...formData, confirmarSenha: e.target.value })}
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
+        if (form.password !== confirmPassword) {
+            setError("As senhas não coincidem");
+            return;
+        }
 
-          <Button type="submit" className="w-full" size="lg">
-            Criar Conta
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
+        setLoading(true);
+
+        try {
+            const response = await register(form);
+            toast.success(response.message, {
+                description: `Usuário: ${response.username}`,
+                duration: 4000,
+            });
+            setTimeout(() => {
+                router.push("/login");
+            }, 1000);
+        } catch (err: any) {
+            setError(err?.message ?? "Erro ao registrar");
+            toast.error("Erro ao criar conta", {
+                description: err?.message ?? "Tente novamente",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Card className="border-border/50">
+            <CardContent className="pt-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
+
+                    <div className="space-y-2">
+                        <Label htmlFor="username">Nome de Usuário</Label>
+                        <Input
+                            id="username"
+                            type="text"
+                            value={form.username}
+                            placeholder="seuuser"
+                            onChange={(e) => setForm({ ...form, username: e.target.value })}
+                            required
+                            className="bg-secondary border-border"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="email">E-mail</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            value={form.email}
+                            placeholder="seu@email.com"
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            required
+                            className="bg-secondary border-border"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Senha</Label>
+                        <Input
+                            id="password"
+                            type="password"
+                            value={form.password}
+                            placeholder="••••••••"
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            required
+                            className="bg-secondary border-border"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="confirm">Confirmar Senha</Label>
+                        <Input
+                            id="confirm"
+                            type="password"
+                            value={confirmPassword}
+                            placeholder="••••••••"
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            className="bg-secondary border-border"
+                        />
+                    </div>
+
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                    <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                        {loading ? "Criando conta..." : "Registrar"}
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
 }

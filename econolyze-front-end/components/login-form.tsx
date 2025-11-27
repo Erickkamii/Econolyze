@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import {toast} from "sonner";
 
 export function LoginForm() {
     const router = useRouter();
-    const { login } = useAuth();
+    const { login } = useAuth()
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -24,9 +25,16 @@ export function LoginForm() {
 
         try {
             await login({ username, password });
+            toast.error("Login bem-sucedido", {
+                description: `Usuário: ${username}`,
+                duration: 4000
+            });
             router.push("/carteira");
         } catch (err: any) {
             setError(err?.message ?? "Erro ao fazer login");
+            toast.error("Erro ao fazer login", {
+                description: err?.message ?? "Tente novamente",
+            });
         } finally {
             setLoading(false);
         }

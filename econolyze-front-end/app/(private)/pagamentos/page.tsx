@@ -64,7 +64,7 @@ export default function PagamentosPage() {
             const percentualPago = (transacao.valorPago / transacao.valorTotal) * 100
 
             return (
-              <Link href={`/pagamentos/${transacao.id}`} key={transacao.id}>
+              <Link href={`/econolyze-front-end/app/private/pagamentos/${transacao.id}`} key={transacao.id}>
                 <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-start justify-between">

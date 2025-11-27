@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
+import {Toaster} from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -39,6 +40,7 @@ export default function RootLayout({
       <AuthProvider>
           {children}
       </AuthProvider>        {/* Analytics component was removed due to causing an error */}
+      <Toaster position="top-right"/>
       </body>
     </html>
   )
