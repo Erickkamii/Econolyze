@@ -2,6 +2,7 @@ package dev.econolyze.interfaces.resource;
 
 import dev.econolyze.application.dto.response.BalanceResponse;
 import dev.econolyze.application.services.BalanceService;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -17,7 +18,7 @@ public class BalanceResource {
     BalanceService balanceService;
 
     @GET
-    public RestResponse<BalanceResponse> getBalance() {
-        return RestResponse.ok(balanceService.getBalanceByUserId());
+    public Uni<RestResponse<BalanceResponse>> getBalance() {
+        return balanceService.getBalanceByUserId().map(RestResponse::ok);
     }
 }

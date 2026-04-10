@@ -1,7 +1,8 @@
 package dev.econolyze.infrastructure.repository;
 
 import dev.econolyze.domain.entity.FinancialGoal;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.hibernate.reactive.panache.PanacheRepository;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
 @ApplicationScoped
 public class FinancialGoalRepository implements PanacheRepository<FinancialGoal> {
 
-    public List<FinancialGoal> getAllGoalsByUserId(Long userId){
+    public Uni<List<FinancialGoal>> getAllGoalsByUserId(Long userId){
             return list("userId", userId);
     }
 }

@@ -4,6 +4,7 @@ import dev.econolyze.application.dto.request.CreateAccountRequest;
 import dev.econolyze.application.dto.request.UpdateAccountRequest;
 import dev.econolyze.application.dto.response.AccountResponse;
 import dev.econolyze.application.services.AccountService;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -17,34 +18,31 @@ public class AccountResource {
     AccountService accountService;
 
     @POST
-    public RestResponse<AccountResponse> createAccount(CreateAccountRequest request){
-        AccountResponse response = accountService.createAccount(request);
-        return RestResponse.ok(response);
+    public Uni<RestResponse<AccountResponse>> createAccount(CreateAccountRequest request){
+        return accountService.createAccount(request)
+                .map(RestResponse::ok);
     }
 
     @PUT
     @Path("/{accountId}")
-    public RestResponse<AccountResponse> updateAccount(@PathParam("accountId") Long accountId, UpdateAccountRequest request){
-        AccountResponse response = accountService.updateAccount(request, accountId);
-        return RestResponse.ok(response);
+    public Uni<RestResponse<AccountResponse>> updateAccount(@PathParam("accountId") Long accountId, UpdateAccountRequest request){
+        return accountService.updateAccount(request, accountId).map(RestResponse::ok);
     }
 
     @DELETE
     @Path("/{accountId}")
-    public RestResponse<Void> deleteAccount(@PathParam("accountId") Long accountId){
-        accountService.deleteAccount(accountId);
-        return RestResponse.noContent();
+    public Uni<RestResponse<Void>> deleteAccount(@PathParam("accountId") Long accountId){
+        return accountService.deleteAccount(accountId).replaceWith(RestResponse::noContent);
     }
 
     @GET
     @Path("/{accountId}")
-    public RestResponse<AccountResponse> getAccountById(@PathParam("accountId") Long accountId){
-        AccountResponse response = accountService.getAccountById(accountId);
-        return RestResponse.ok(response);
+    public Uni<RestResponse<AccountResponse>> getAccountById(@PathParam("accountId") Long accountId){
+        return accountService.getAccountById(accountId).map(RestResponse::ok);
     }
 
     @GET
-    public RestResponse<List<AccountResponse>> getAllAccounts(){
-        return RestResponse.ok(accountService.getAllAccounts());
+    public Uni<RestResponse<List<AccountResponse>>> getAllAccounts(){
+        return accountService.getAllAccounts().map(RestResponse::ok);
     }
 }

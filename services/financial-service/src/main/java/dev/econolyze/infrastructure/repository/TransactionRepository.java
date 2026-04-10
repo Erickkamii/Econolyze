@@ -3,9 +3,10 @@ package dev.econolyze.infrastructure.repository;
 import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.TransactionType;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.hibernate.reactive.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
@@ -13,27 +14,49 @@ import java.util.List;
 @ApplicationScoped
 public class TransactionRepository implements PanacheRepository<Transaction> {
 
-    public Transaction findTransactionById(Long id){
+    public Uni<Transaction> findTransactionById(Long id){
         return find("id", id).firstResult();
     }
 
-    public List<Transaction> findAllTransactionsByUserIdAndType(Long userId, TransactionType type){
-        return list("userId = ?1 and type =? 2", userId, type);
+    public Uni<List<Transaction>> findAllTransactionsByUserIdAndType(Long userId, TransactionType type){
+        return list("userId = ?1 and type =?2", userId, type);
     }
 
-    public PanacheQuery<Transaction> findPagedByUserId(Long userId, int page, int size) {
-        return find("userId", userId).page(Page.of(page, size));
+    public Uni<List<Transaction>> findPagedByUserId(Long userId, int page, int size, Sort sort) {
+        return find("userId", sort, userId)
+                .page(Page.of(page, size))
+                .list();
     }
 
-    public PanacheQuery<Transaction> findPagedByUserIdAndCategory(Long userId, Category category, int page, int size) {
-        return find("userId = ?1 and category = ?2", userId, category).page(Page.of(page, size));
+    public Uni<List<Transaction>> findFiltered(Long userId, Sort sort, TransactionType type, Category category, int page, int size) {
+        if (type != null && category != null) {
+            return find("userId = ?1 AND type = ?2 AND category = ?3", sort, userId, type, category)
+                    .page(Page.of(page,size)).list();
+        } else if (type != null) {
+            return find("userId = ?1 AND type = ?2", sort, userId, type)
+                    .page(Page.of(page,size)).list();
+        } else if (category != null) {
+            return find("userId = ?1 AND category = ?2", sort, userId, category)
+                    .page(Page.of(page,size)).list();
+        } else {
+            return find("userId = ?1", sort, userId)
+                    .page(Page.of(page,size)).list();
+        }
     }
 
-    public PanacheQuery<Transaction> findPagedByUserIdAndType(Long userId, TransactionType type, int page, int size ) {
-        return find("userId = ?1 and type = ?2", userId, type).page(Page.of(page, size));
+    public Uni<Long> countFiltered(Long userId, TransactionType type, Category category) {
+        if (type != null && category != null) {
+            return count("userId = ?1 AND type = ?2 AND category = ?3", userId, type, category);
+        } else if (type != null) {
+            return count("userId = ?1 AND type = ?2", userId, type);
+        } else if (category != null) {
+            return count("userId = ?1 AND category = ?2", userId, category);
+        } else {
+            return count("userId = ?1", userId);
+        }
     }
 
-    public PanacheQuery<Transaction> findPagedByRecurringTemplateId(Long recurringTemplateId, int page, int size) {
-        return find("recurringTemplateId = ?1", recurringTemplateId).page(Page.of(page, size));
+    public Uni<List<Transaction>> findPagedByRecurringTemplateId(Long recurringTemplateId, int page, int size) {
+        return find("recurringTemplateId = ?1", recurringTemplateId).page(Page.of(page, size)).list();
     }
 }

@@ -10,9 +10,11 @@ import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.FinancialGoal;
 import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.infrastructure.repository.FinancialGoalRepository;
+import io.quarkus.hibernate.reactive.panache.common.WithSession;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,23 +36,40 @@ public class GoalService {
     @Inject
     UserContext userContext;
 
-    @Transactional
-    public FinancialGoalResponse createNewGoal(FinancialGoalRequest request) {
+    @WithTransaction
+    public Uni<FinancialGoalResponse> createNewGoal(FinancialGoalRequest request) {
         FinancialGoal goal = financialGoalMapper.mapToEntity(dtoBuilder(request));
-        financialGoalRepository.persist(goal);
-        return financialGoalMapper.mapToResponse(goal);
+        return financialGoalRepository.persist(goal).map(financialGoalMapper::mapToResponse);
     }
 
-    public FinancialGoalResponse getGoalById(Long id){
-        return financialGoalMapper.mapToResponse(financialGoalRepository.findById(id));
+    @WithSession
+    public Uni<FinancialGoalResponse> getGoalById(Long id){
+        return financialGoalRepository.findById(id).map(financialGoalMapper::mapToResponse);
     }
 
-    public GoalProgressDTO getGoalProgress(Long id){
+    @WithSession
+    public Uni<GoalProgressDTO> getGoalProgress(Long id){
         Long userId = userContext.getUserId();
-        FinancialGoalDTO financialGoalDTO = financialGoalMapper.mapToDTO(getGoalById(id));
-        List<TransactionDTO> transactionDTO = removeIfNotMatch(transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME), financialGoalDTO.getId());
-        BigDecimal incomesSum = transactionDTO.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return analyticsService.analyzeGoalProgress(financialGoalDTO, incomesSum);
+        return getGoalById(id)
+                .flatMap(gr -> {
+                    FinancialGoalDTO goal = financialGoalMapper.mapToDTO(gr);
+                    return transactionService.getTransactionByUserIdAndType(userId, TransactionType.INCOME)
+                            .map(transactions -> removeIfNotMatch(transactions, id))
+                            .map(t -> {
+                                BigDecimal incomesSum = t.stream()
+                                        .map(TransactionDTO::getAmount)
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                return analyticsService.analyzeGoalProgress(goal, incomesSum);
+                            });
+                });
+    }
+
+    @WithSession
+    public Uni<List<FinancialGoalResponse>> getAllGoals() {
+        return financialGoalRepository.getAllGoalsByUserId(userContext.getUserId())
+                .map(g -> g.stream()
+                        .map(financialGoalMapper::mapToResponse)
+                        .toList());
     }
 
     private List<TransactionDTO> removeIfNotMatch(List<TransactionDTO> transactionDTOS, Long goalId){
@@ -60,15 +79,13 @@ public class GoalService {
     }
 
     private FinancialGoalDTO dtoBuilder(FinancialGoalRequest request) {
-        Long userId = userContext.getUserId();
         return FinancialGoalDTO.builder()
                 .name(request.name())
-                .userId(userId)
+                .userId(userContext.getUserId())
                 .amount(request.amount())
                 .description(request.description())
                 .type(request.type())
                 .status(request.status())
                 .build();
     }
-
 }

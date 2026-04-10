@@ -7,111 +7,89 @@ import dev.econolyze.application.dto.response.RecurrencySummaryResponse;
 import dev.econolyze.application.dto.response.RecurringTemplateResponse;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.services.RecurringTransactionService;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import lombok.RequiredArgsConstructor;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Path("/api/recurring-template")
+@RequiredArgsConstructor
 public class RecurringTemplateResource {
     @Inject
     RecurringTransactionService recurringTransactionService;
 
     @POST
-    public RestResponse<RecurringTemplateResponse> createRecurrency(CreateRecurringRequest request) {
-        RecurringTemplateResponse created = recurringTransactionService.createRecurring(request);
-        return RestResponse.ok(created);
+    public Uni<RestResponse<RecurringTemplateResponse>> createRecurrency(CreateRecurringRequest request) {
+        return recurringTransactionService.createRecurring(request).map(RestResponse::ok);
     }
 
     @PUT
     @Path("/{id}")
-    public RestResponse<RecurringTemplateResponse> update(
+    public Uni<RestResponse<RecurringTemplateResponse>> update(
             @PathParam("id") Long templateId,
             UpdateRecurringRequest request) {
-
-        RecurringTemplateResponse updated = recurringTransactionService.updateTemplate(templateId, request);
-        return RestResponse.ok(updated);
+        return recurringTransactionService.updateTemplate(templateId, request).map(RestResponse::ok);
     }
 
     @GET
-    public RestResponse<List<RecurringTemplateResponse>> listActiveRecurrencyTemplates() {
-        List<RecurringTemplateResponse> templates = recurringTransactionService.getAllTemplatesByUserId();
-        return RestResponse.ok(templates);
+    public Uni<RestResponse<List<RecurringTemplateResponse>>> listActiveRecurrencyTemplates() {
+        return recurringTransactionService.getAllTemplatesByUserId().map(RestResponse::ok);
     }
 
     @GET
     @Path("/{id}")
-    public RestResponse<RecurringTemplateResponse> getById(@PathParam("id") Long templateId) {
-        RecurringTemplateResponse template = recurringTransactionService.getTemplateById(templateId);
-        return RestResponse.ok(template);
+    public Uni<RestResponse<RecurringTemplateResponse>> getById(@PathParam("id") Long templateId) {
+        return recurringTransactionService.getTemplateById(templateId).map(RestResponse::ok);
     }
 
     @GET
     @Path("/{id}/history")
-    public RestResponse<PagedResponse<TransactionResponse>> getHistory(
+    public Uni<RestResponse<PagedResponse<TransactionResponse>>> getHistory(
             @PathParam("id") Long templateId,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("pageSize") @DefaultValue("20") int pageSize) {
-
-        PagedResponse<TransactionResponse> history = recurringTransactionService.getTransactionHistory(
-                templateId,
-                page,
-                pageSize
-        );
-        return RestResponse.ok(history);
+        return recurringTransactionService.getTransactionHistory(templateId, page, pageSize).map(RestResponse::ok);
     }
 
     @GET
     @Path("/{templateId}/preview")
-    public RestResponse<PagedResponse<LocalDate>> previewSimple(@PathParam("templateId") Long templateId,
+    public Uni<RestResponse<PagedResponse<LocalDate>>> previewSimple(@PathParam("templateId") Long templateId,
                                                                 @QueryParam("page") @DefaultValue("0") int page,
                                                                 @QueryParam("pageSize") @DefaultValue("20") int pageSize,
                                                                 @QueryParam("maxResults")@DefaultValue("30")  Integer maxResults) {
-        PagedResponse<LocalDate> preview = recurringTransactionService.previewNextRecurrencies(
-                templateId,
-                page, pageSize,maxResults
-        );
-        return RestResponse.ok(preview);
+        return recurringTransactionService.previewNextRecurrencies(templateId, page, pageSize,maxResults).map(RestResponse::ok);
     }
 
     @GET
     @Path("/{templateId}/preview/full")
-    public RestResponse<PagedResponse<LocalDate>> previewPaginated(
+    public Uni<RestResponse<PagedResponse<LocalDate>>> previewPaginated(
             @PathParam("templateId") Long templateId,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("pageSize") @DefaultValue("12") int pageSize,
             @QueryParam("maxResults") @DefaultValue("1000") Integer maxResults) {
-
-        PagedResponse<LocalDate> preview = recurringTransactionService.previewNextRecurrencies(
-                templateId,
-                page,
-                pageSize,
-                maxResults
-        );
-        return RestResponse.ok(preview);
+        return recurringTransactionService.previewNextRecurrencies(templateId, page, pageSize, maxResults).map(RestResponse::ok);
     }
 
     @GET
     @Path("/{id}/summary")
-    public RestResponse<RecurrencySummaryResponse> getSummary(@PathParam("id") Long templateId) {
-        RecurrencySummaryResponse summary = recurringTransactionService.getRecurrencySummary(templateId);
-        return RestResponse.ok(summary);
+    public Uni<RestResponse<RecurrencySummaryResponse>> getSummary(@PathParam("id") Long templateId) {
+        return recurringTransactionService.getRecurrencySummary(templateId).map(RestResponse::ok);
     }
 
     @PATCH
     @Path("/{id}/toggle")
-    public RestResponse<RecurringTemplateResponse> toggleActive(@PathParam("id") Long templateId) {
-        RecurringTemplateResponse updated = recurringTransactionService.toggleActive(templateId);
-        return RestResponse.ok(updated);
+    public Uni<RestResponse<RecurringTemplateResponse>> toggleActive(@PathParam("id") Long templateId) {
+        return recurringTransactionService.toggleActive(templateId).map(RestResponse::ok);
     }
 
     @DELETE
     @Path("/{id}")
-    public RestResponse<Void> delete(@PathParam("id") Long templateId) {
-        recurringTransactionService.deleteTemplate(templateId);
-        return RestResponse.noContent();
+    public Uni<RestResponse<Void>> delete(@PathParam("id") Long templateId) {
+        return recurringTransactionService.deleteTemplate(templateId).replaceWith(RestResponse.noContent());
     }
 
 }

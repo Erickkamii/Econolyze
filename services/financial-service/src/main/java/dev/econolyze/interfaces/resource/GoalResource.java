@@ -7,12 +7,14 @@ import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
 import dev.econolyze.application.services.GoalService;
 import dev.econolyze.application.services.InvestmentService;
 import dev.econolyze.domain.enums.Estimate;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Path( "/api/goal")
 public class GoalResource {
@@ -22,63 +24,55 @@ public class GoalResource {
     @Inject
     InvestmentService investmentService;
 
-    InvestmentProjectionResponse projectionDTO;
 
     @POST
-    public RestResponse<FinancialGoalResponse> createNewGoal(FinancialGoalRequest request) {
-        FinancialGoalResponse createdGoal = goalService.createNewGoal(request);
-        return RestResponse.ok(createdGoal);
+    public Uni<RestResponse<FinancialGoalResponse>> createNewGoal(FinancialGoalRequest request) {
+        return goalService.createNewGoal(request).map(RestResponse::ok);
     }
 
     @GET
     @Path("/all")
-    public String getAll() {
-        return "all goals";
+    public Uni<RestResponse<List<FinancialGoalResponse>>> getAll() {
+        return goalService.getAllGoals().map(RestResponse::ok);
     }
 
     @GET
     @Path("/{goalId}")
-    public RestResponse<FinancialGoalResponse> getGoalById(@PathParam("goalId") Long goalId) {
-        FinancialGoalResponse goalDTO = goalService.getGoalById(goalId);
-        return RestResponse.ok(goalDTO);
+    public Uni<RestResponse<FinancialGoalResponse>> getGoalById(@PathParam("goalId") Long goalId) {
+        return goalService.getGoalById(goalId).map(RestResponse::ok);
     }
 
     @GET
     @Path("/progress/{goalId}")
-    public RestResponse<GoalProgressDTO> getGoalProgress(@PathParam("goalId") Long goalId) {
-        GoalProgressDTO progressDTO = goalService.getGoalProgress(goalId);
-        return RestResponse.ok(progressDTO);
+    public Uni<RestResponse<GoalProgressDTO>> getGoalProgress(@PathParam("goalId") Long goalId) {
+        return goalService.getGoalProgress(goalId).map(RestResponse::ok);
     }
 
     @GET
     @Path("/annual-cdi")
-    public RestResponse<InvestmentProjectionResponse> getAnnualInvestmentProgress(@RestQuery("percentage") BigDecimal percentage){
-        if ( percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.YEARLY);
-        else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.YEARLY, percentage);
-        return RestResponse.ok(projectionDTO);
+    public Uni<RestResponse<InvestmentProjectionResponse>> getAnnualInvestmentProgress(@RestQuery("percentage") BigDecimal percentage){
+        Uni<InvestmentProjectionResponse> result = percentage == null
+                ? investmentService.getProjectionBasedOnCdiRate(Estimate.YEARLY)
+                : investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.YEARLY, percentage);
+        return result.map(RestResponse::ok);
     }
 
     @GET
     @Path("/monthly-cdi")
-    public RestResponse<InvestmentProjectionResponse> getMonthlyInvestmentProgress(
-                                                                              @RestQuery("percentage") BigDecimal percentage) {
-        if ( percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY);
-        else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.MONTHLY, percentage);
-        return RestResponse.ok(projectionDTO);
+    public Uni<RestResponse<InvestmentProjectionResponse>> getMonthlyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
+        Uni<InvestmentProjectionResponse> result = percentage == null
+                ? investmentService.getProjectionBasedOnCdiRate(Estimate.MONTHLY)
+                : investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.MONTHLY, percentage);
+        return result.map(RestResponse::ok);
     }
 
     @GET
     @Path("/daily-cdi")
-    public RestResponse<InvestmentProjectionResponse> getDailyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
-        if(percentage == null)
-            projectionDTO = investmentService.getProjectionBasedOnCdiRate(Estimate.DAILY);
-        else
-            projectionDTO = investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.DAILY, percentage);
-        return RestResponse.ok(projectionDTO);
+    public Uni<RestResponse<InvestmentProjectionResponse>> getDailyInvestmentProgress(@RestQuery("percentage") BigDecimal percentage) {
+        Uni<InvestmentProjectionResponse> result = percentage == null
+                ? investmentService.getProjectionBasedOnCdiRate(Estimate.DAILY)
+                : investmentService.getProjectionBasedOnCdiWithPercentage(Estimate.DAILY, percentage);
+        return result.map(RestResponse::ok);
     }
 
 }

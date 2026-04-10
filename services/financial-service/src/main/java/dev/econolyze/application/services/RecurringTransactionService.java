@@ -14,10 +14,13 @@ import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.RecurrenceFrequency;
 import dev.econolyze.infrastructure.repository.RecurrencyTemplateRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
+import io.quarkus.hibernate.reactive.panache.common.WithSession;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.scheduler.Scheduled;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
+@RequiredArgsConstructor
 public class RecurringTransactionService {
     @Inject
     RecurrencyTemplateRepository recurrencyTemplateRepository;
@@ -37,14 +41,14 @@ public class RecurringTransactionService {
     @Inject
     UserContext userContext;
 
-    @Transactional
-    public RecurringTemplateResponse createRecurring(CreateRecurringRequest request) {
+    @WithTransaction
+    public Uni<RecurringTemplateResponse> createRecurring(CreateRecurringRequest request) {
         RecurrencyTemplateDTO dto = mapRequestToDTO(request);
         return createRecurringFromDTO(dto);
     }
 
-    @Transactional
-    public RecurringTemplateResponse createRecurringFromDTO(RecurrencyTemplateDTO dto) {
+    @WithTransaction
+    public Uni<RecurringTemplateResponse> createRecurringFromDTO(RecurrencyTemplateDTO dto) {
         RecurringTemplate template = RecurringTemplate.builder()
                 .userId(dto.userId())
                 .amount(dto.amount())
@@ -60,9 +64,8 @@ public class RecurringTransactionService {
                 .timesProcessed(0)
                 .isActive(true)
                 .build();
-
-        recurrencyTemplateRepository.persist(template);
-        return recurrencyTemplateMapper.mapToResponse(template);
+        return recurrencyTemplateRepository.persist(template)
+                .map(recurrencyTemplateMapper::mapToResponse);
     }
 
     private RecurrencyTemplateDTO mapRequestToDTO(CreateRecurringRequest request) {
@@ -90,21 +93,28 @@ public class RecurringTransactionService {
     }
 
     @Scheduled(cron = "0 0 1 * * ?")
-    @Transactional
     public void processRecurringTransactions() {
-        LocalDate today = LocalDate.now();
-        List<RecurringTemplate> dueTemplates = recurrencyTemplateRepository
-                .findActiveWithNextOccurrenceBefore(today);
-
-        for (RecurringTemplate template : dueTemplates) {
-            if (shouldProcess(template)) {
-                createTransactionFromTemplate(template);
-                updateNextOccurrence(template);
-            }
-        }
+        doProcess().await().indefinitely();
     }
 
-    private void createTransactionFromTemplate(RecurringTemplate template) {
+    @WithTransaction
+    public Uni<Void> doProcess(){
+        LocalDate today = LocalDate.now();
+        return recurrencyTemplateRepository.findActiveWithNextOccurrenceBefore(today)
+                .flatMap(templates -> {
+                    List<Uni<Void>> tasks = templates.stream()
+                            .filter(this::shouldProcess)
+                            .map(template ->
+                                    createTransactionFromTemplate(template)
+                                            .invoke(ignored -> updateNextOccurrence(template))
+                            )
+                            .toList();
+                    if(tasks.isEmpty()) return Uni.createFrom().voidItem();
+                    return Uni.combine().all().unis(tasks).discardItems();
+                });
+    }
+
+    private Uni<Void> createTransactionFromTemplate(RecurringTemplate template) {
         Transaction transaction = Transaction.builder()
                 .userId(template.getUserId())
                 .amount(template.getAmount())
@@ -116,14 +126,14 @@ public class RecurringTransactionService {
                 .isRecurring(true)
                 .build();
 
-        transactionRepository.persist(transaction);
-
         template.setTimesProcessed(template.getTimesProcessed() + 1);
 
         if (template.getMaxOccurrences() != null
                 && template.getTimesProcessed() >= template.getMaxOccurrences()) {
             template.setIsActive(false);
         }
+
+        return transactionRepository.persist(transaction).replaceWithVoid();
     }
 
     private void updateNextOccurrence(RecurringTemplate template) {
@@ -144,82 +154,69 @@ public class RecurringTransactionService {
         }
     }
 
-    @Transactional
-    public RecurringTemplateResponse updateTemplate(Long templateId, UpdateRecurringRequest request) {
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
-
-        if (request.amount() != null) {
-            template.setAmount(request.amount());
-        }
-        if (request.description() != null) {
-            template.setDescription(request.description());
-        }
-        if (request.category() != null) {
-            template.setCategory(request.category());
-        }
-        if (request.method() != null) {
-            template.setMethod(request.method());
-        }
-        if (request.endDate() != null) {
-            template.setEndDate(request.endDate());
-        }
-        if (request.maxOccurrences() != null) {
-            template.setMaxOccurrences(request.maxOccurrences());
-        }
-
-        return recurrencyTemplateMapper.mapToResponse(template);
+    @WithTransaction
+    public Uni<RecurringTemplateResponse> updateTemplate(Long templateId, UpdateRecurringRequest request) {
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .map(template -> {
+                    if (request.amount() != null) template.setAmount(request.amount());
+                    if (request.description() != null) template.setDescription(request.description());
+                    if (request.category() != null) template.setCategory(request.category());
+                    if (request.method() != null) template.setMethod(request.method());
+                    if (request.endDate() != null) template.setEndDate(request.endDate());
+                    if (request.maxOccurrences() != null) template.setMaxOccurrences(request.maxOccurrences());
+                    return template;
+                }).map(recurrencyTemplateMapper::mapToResponse);
     }
 
-    @Transactional
-    public RecurringTemplateResponse toggleActive(Long templateId) {
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
-
-        template.setIsActive(!template.getIsActive());
-        return recurrencyTemplateMapper.mapToResponse(template);
+    @WithTransaction
+    public Uni<RecurringTemplateResponse> toggleActive(Long templateId) {
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .map(t -> {
+                    t.setIsActive(!t.getIsActive());
+                    return t;
+                })
+                .map(recurrencyTemplateMapper::mapToResponse);
     }
 
-    @Transactional
-    public void deleteTemplate(Long templateId) {
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
-
-        recurrencyTemplateRepository.delete(template);
+    @WithTransaction
+    public Uni<Void> deleteTemplate(Long templateId) {
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .flatMap(recurrencyTemplateRepository::delete);
     }
 
-    public List<RecurringTemplateResponse> getAllTemplatesByUserId() {
-        Long userId = userContext.getUserId();
-        List<RecurringTemplate> templates = recurrencyTemplateRepository.findActiveByUserId(userId);
-        return templates.stream()
-                .map(recurrencyTemplateMapper::mapToResponse)
-                .toList();
+    @WithSession
+    public Uni<List<RecurringTemplateResponse>> getAllTemplatesByUserId() {
+        return recurrencyTemplateRepository.findActiveByUserId(userContext.getUserId())
+                .map(t -> t.stream()
+                        .map(recurrencyTemplateMapper::mapToResponse)
+                        .toList());
     }
 
-    public PagedResponse<TransactionResponse> getTransactionHistory(Long templateId, int page, int pageSize) {
-        return PagedResponse.fromPanacheQuery(
-                transactionRepository.findPagedByRecurringTemplateId(templateId, page, pageSize),
-                page,
-                pageSize,
-                transactionMapper::mapToResponse
-        );
+    @WithSession
+    public Uni<PagedResponse<TransactionResponse>> getTransactionHistory(Long templateId, int page, int pageSize) {
+        Uni<List<Transaction>> listUni = transactionRepository.findPagedByRecurringTemplateId(templateId, page, pageSize);
+        Uni<Long> countUni = transactionRepository.count("recurringTemplateId = ?1", templateId);
+        return PagedResponse.from(listUni, countUni, page, pageSize, transactionMapper::mapToResponse);
     }
 
-    public PagedResponse<LocalDate> previewNextRecurrencies(
+    @WithSession
+    public Uni<PagedResponse<LocalDate>> previewNextRecurrencies(
             Long templateId,
             int page,
             int pageSize,
             Integer maxResults) {
 
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .map(t -> {
+                    int limit = (maxResults != null && maxResults > 0 && maxResults<=5000)?maxResults:1000;
 
-        int limit = (maxResults != null && maxResults > 0 && maxResults <= 5000)
-                ? maxResults
-                : 1000;
-
-        List<LocalDate> allDates = generateAllOccurrences(template, limit);
-        return paginateDates(allDates, page, pageSize);
+                    List<LocalDate> allDates = generateAllOccurrences(t, limit);
+                    return paginateDates(allDates, page, pageSize);
+                });
     }
 
     private List<LocalDate> generateAllOccurrences(RecurringTemplate template, int maxResults) {
@@ -303,41 +300,44 @@ public class RecurringTransactionService {
         };
     }
 
-    public RecurringTemplateResponse getTemplateById(Long templateId) {
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
-
-        return recurrencyTemplateMapper.mapToResponse(template);
+    @WithSession
+    public Uni<RecurringTemplateResponse> getTemplateById(Long templateId) {
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .map(recurrencyTemplateMapper::mapToResponse);
     }
 
-    public RecurrencySummaryResponse getRecurrencySummary(Long templateId) {
-        RecurringTemplate template = recurrencyTemplateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+    @WithSession
+    public Uni<RecurrencySummaryResponse> getRecurrencySummary(Long templateId) {
+        return recurrencyTemplateRepository.findById(templateId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
+                .map(t -> {
+                    List<LocalDate> allDates = generateAllOccurrences(t, 5000);
 
-        List<LocalDate> allDates = generateAllOccurrences(template, 5000);
+                    int totalOccurrences = allDates.size();
+                    int timesProcessed = t.getTimesProcessed() != null ? t.getTimesProcessed() : 0;
+                    int remaining = totalOccurrences - timesProcessed;
 
-        int totalOccurrences = allDates.size();
-        int timesProcessed = template.getTimesProcessed() != null ? template.getTimesProcessed() : 0;
-        int remaining = totalOccurrences - timesProcessed;
+                    BigDecimal totalAmount = t.getAmount().multiply(new BigDecimal(totalOccurrences));
+                    BigDecimal paidAmount = t.getAmount().multiply(new BigDecimal(timesProcessed));
+                    BigDecimal remainingAmount = t.getAmount().multiply(new BigDecimal(remaining));
 
-        BigDecimal totalAmount = template.getAmount().multiply(new BigDecimal(totalOccurrences));
-        BigDecimal paidAmount = template.getAmount().multiply(new BigDecimal(timesProcessed));
-        BigDecimal remainingAmount = template.getAmount().multiply(new BigDecimal(remaining));
+                    return new RecurrencySummaryResponse(
+                            t.getId(),
+                            t.getAmount(),
+                            t.getFrequency(),
+                            totalOccurrences,
+                            remaining,
+                            totalAmount,
+                            paidAmount,
+                            remainingAmount,
+                            allDates.isEmpty() ? null : allDates.getFirst(),
+                            allDates.isEmpty() ? null : allDates.getLast(),
+                            t.getNextOccurrence(),
+                            t.getIsActive()
+                    );
+                });
 
-        return new RecurrencySummaryResponse(
-                template.getId(),
-                template.getAmount(),
-                template.getFrequency(),
-                totalOccurrences,
-                remaining,
-                totalAmount,
-                paidAmount,
-                remainingAmount,
-                allDates.isEmpty() ? null : allDates.getFirst(),
-                allDates.isEmpty() ? null : allDates.getLast(),
-                template.getNextOccurrence(),
-                template.getIsActive()
-        );
     }
 
 }

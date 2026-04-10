@@ -5,17 +5,19 @@ import dev.econolyze.application.dto.response.PaymentResponse;
 import dev.econolyze.application.mapper.PaymentMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.Payment;
-import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.TransactionStatus;
 import dev.econolyze.infrastructure.repository.PaymentRepository;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
+import io.quarkus.hibernate.reactive.panache.common.WithSession;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -32,40 +34,46 @@ public class PaymentService {
     @Inject
     AccountService accountService;
 
-        @Transactional
-        public PaymentResponse createPayment(PaymentRequest request){
-            Transaction transaction = transactionRepository.findTransactionById(request.transactionId());
-            if(transaction == null)
-                throw new RuntimeException("Transaction not found");
-            if (!transaction.getUserId().equals(userContext.getUserId())) {
-                throw new SecurityException("You cannot add a payment to another user's transaction");
-            }
-            if (transaction.getStatus()== TransactionStatus.PAID){
-                throw new RuntimeException("Transaction is already paid");
-            }
-            if (request.amount().compareTo(transaction.getRemainingBalance()) > 0) {
-                throw new RuntimeException("Payment amount exceeds remaining balance");
-            }
+    @WithTransaction
+    public Uni<PaymentResponse> createPayment(PaymentRequest request) {
+        return transactionRepository.findTransactionById(request.transactionId())
+                .onItem().ifNull().failWith(() -> new RuntimeException("Transaction not found"))
+                .flatMap(transaction -> {
+                    if (!transaction.getUserId().equals(userContext.getUserId()))
+                        throw new SecurityException("You cannot add a payment to another user's transaction");
+                    if (transaction.getStatus() == TransactionStatus.PAID)
+                        throw new RuntimeException("Transaction is already paid");
+                    if (request.amount().compareTo(transaction.getRemainingBalance()) > 0)
+                        throw new RuntimeException("Payment amount exceeds remaining balance");
 
-            Payment payment = paymentMapper.mapToEntity(request);
-            payment.setTransaction(transaction);
-            transaction.getPayments().add(payment);
-            paymentRepository.persist(payment);
-            transaction.recalculateStatus();
-            transactionRepository.persist(transaction);
-            accountService.updateAccountBalance(payment);
-            log.info("Payment created for transaction {} with amount {}", transaction.getId(), payment.getAmount());
-            return paymentMapper.mapToResponse(payment);
-        }
+                    Payment payment = paymentMapper.mapToEntity(request);
+                    payment.setTransaction(transaction);
+                    transaction.getPayments().add(payment);
+                    transaction.recalculateStatus();
 
-    public List<PaymentResponse> getPaymentsByTransactionId(Long transactionId){
-        return paymentRepository.findByTransactionId(transactionId).stream()
-                .map(paymentMapper::mapToResponse)
-                .toList();
+                    return paymentRepository.persist(payment)
+                            .flatMap(savedPayment -> transactionRepository.persist(transaction)
+                                    .flatMap(ignored -> accountService.updateAccountBalance(savedPayment))
+                                    .map(ignored -> {
+                                        log.info("Payment created for transaction {} with amount {}",
+                                                transaction.getId(), savedPayment.getAmount());
+                                        return paymentMapper.mapToResponse(savedPayment);
+                                    }));
+                });
     }
 
-    public PaymentResponse getPaymentById(Long id){
-        return paymentMapper.mapToResponse(paymentRepository.findById(id));
+    @WithSession
+    public Uni<List<PaymentResponse>> getPaymentsByTransactionId(Long transactionId){
+        return paymentRepository.findByTransactionId(transactionId)
+                .map(payments -> payments.stream()
+                        .map(paymentMapper::mapToResponse)
+                        .collect(Collectors.toList()));
+    }
+
+    @WithSession
+    public Uni<PaymentResponse> getPaymentById(Long id){
+        return paymentRepository.findById(id)
+                .map(paymentMapper::mapToResponse);
     }
 
 }
