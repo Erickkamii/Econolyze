@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/context/AuthContext"
+import { AuthProvider } from "@/context/auth.context"
 import {Toaster} from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })

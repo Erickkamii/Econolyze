@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth.context";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ export function LoginForm() {
 
         try {
             await login({ username, password });
-            toast.error("Login bem-sucedido", {
+            toast.success("Login bem-sucedido", {
                 description: `Usuário: ${username}`,
                 duration: 4000
             });
