@@ -15,6 +15,10 @@ public class RecurrencyTemplateRepository implements PanacheRepository<Recurring
     }
 
     public Uni<List<RecurringTemplate>> findActiveByUserId(Long userId) {
-        return list("userId = ?1 and isActive = true", userId);
+        return find("SELECT DISTINCT r FROM RecurringTemplate r LEFT JOIN FETCH r.transactions WHERE r.userId = ?1", userId).list();
+    }
+
+    public Uni<RecurringTemplate> findByIdWithTransactions(Long id) {
+        return find("SELECT DISTINCT r FROM RecurringTemplate r LEFT JOIN FETCH r.transactions WHERE r.id = ?1", id).firstResult();
     }
 }

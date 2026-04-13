@@ -15,32 +15,26 @@ import java.util.List;
 public class TransactionRepository implements PanacheRepository<Transaction> {
 
     public Uni<Transaction> findTransactionById(Long id){
-        return find("id", id).firstResult();
+        return find("SELECT t FROM Transaction t LEFT JOIN FETCH t.payments WHERE t.id = ?1", id).firstResult();
     }
 
     public Uni<List<Transaction>> findAllTransactionsByUserIdAndType(Long userId, TransactionType type){
-        return list("userId = ?1 and type =?2", userId, type);
+        return find("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.payments WHERE t.userId = ?1 AND t.type = ?2", userId, type).list();
     }
 
     public Uni<List<Transaction>> findPagedByUserId(Long userId, int page, int size, Sort sort) {
-        return find("userId", sort, userId)
-                .page(Page.of(page, size))
-                .list();
+        return find("userId = ?1", sort, userId).page(Page.of(page, size)).list();
     }
 
     public Uni<List<Transaction>> findFiltered(Long userId, Sort sort, TransactionType type, Category category, int page, int size) {
         if (type != null && category != null) {
-            return find("userId = ?1 AND type = ?2 AND category = ?3", sort, userId, type, category)
-                    .page(Page.of(page,size)).list();
+            return find("userId = ?1 AND type = ?2 AND category = ?3", sort, userId, type, category).page(Page.of(page,size)).list();
         } else if (type != null) {
-            return find("userId = ?1 AND type = ?2", sort, userId, type)
-                    .page(Page.of(page,size)).list();
+            return find("userId = ?1 AND type = ?2", sort, userId, type).page(Page.of(page,size)).list();
         } else if (category != null) {
-            return find("userId = ?1 AND category = ?2", sort, userId, category)
-                    .page(Page.of(page,size)).list();
+            return find("userId = ?1 AND category = ?2", sort, userId, category).page(Page.of(page,size)).list();
         } else {
-            return find("userId = ?1", sort, userId)
-                    .page(Page.of(page,size)).list();
+            return find("userId = ?1", sort, userId).page(Page.of(page,size)).list();
         }
     }
 
@@ -57,6 +51,21 @@ public class TransactionRepository implements PanacheRepository<Transaction> {
     }
 
     public Uni<List<Transaction>> findPagedByRecurringTemplateId(Long recurringTemplateId, int page, int size) {
-        return find("recurringTemplateId = ?1", recurringTemplateId).page(Page.of(page, size)).list();
+        return find("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.payments WHERE t.recurringTemplateId = ?1", recurringTemplateId)
+                .page(Page.of(page, size)).list();
+    }
+
+    public Uni<List<Transaction>> findByIdsWithPayments(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Uni.createFrom().item(List.of());
+        }
+        return find("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.payments WHERE t.id IN ?1", ids)
+                .list()
+                .map(unsortedHydrated -> {
+                    java.util.Map<Long, Transaction> map = unsortedHydrated.stream()
+                            .collect(java.util.stream.Collectors.toMap(Transaction::getId, t -> t));
+
+                    return ids.stream().map(map::get).toList();
+                });
     }
 }

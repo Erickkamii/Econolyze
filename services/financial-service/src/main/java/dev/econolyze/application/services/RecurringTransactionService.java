@@ -156,7 +156,7 @@ public class RecurringTransactionService {
 
     @WithTransaction
     public Uni<RecurringTemplateResponse> updateTemplate(Long templateId, UpdateRecurringRequest request) {
-        return recurrencyTemplateRepository.findById(templateId)
+        return recurrencyTemplateRepository.findByIdWithTransactions(templateId)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
                 .map(template -> {
                     if (request.amount() != null) template.setAmount(request.amount());
@@ -171,7 +171,7 @@ public class RecurringTransactionService {
 
     @WithTransaction
     public Uni<RecurringTemplateResponse> toggleActive(Long templateId) {
-        return recurrencyTemplateRepository.findById(templateId)
+        return recurrencyTemplateRepository.findByIdWithTransactions(templateId)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
                 .map(t -> {
                     t.setIsActive(!t.getIsActive());
@@ -182,7 +182,7 @@ public class RecurringTransactionService {
 
     @WithTransaction
     public Uni<Void> deleteTemplate(Long templateId) {
-        return recurrencyTemplateRepository.findById(templateId)
+        return recurrencyTemplateRepository.findByIdWithTransactions(templateId)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
                 .flatMap(recurrencyTemplateRepository::delete);
     }
@@ -302,14 +302,14 @@ public class RecurringTransactionService {
 
     @WithSession
     public Uni<RecurringTemplateResponse> getTemplateById(Long templateId) {
-        return recurrencyTemplateRepository.findById(templateId)
+        return recurrencyTemplateRepository.findByIdWithTransactions(templateId)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
                 .map(recurrencyTemplateMapper::mapToResponse);
     }
 
     @WithSession
     public Uni<RecurrencySummaryResponse> getRecurrencySummary(Long templateId) {
-        return recurrencyTemplateRepository.findById(templateId)
+        return recurrencyTemplateRepository.findByIdWithTransactions(templateId)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Template not found: " + templateId))
                 .map(t -> {
                     List<LocalDate> allDates = generateAllOccurrences(t, 5000);

@@ -35,7 +35,6 @@ public class DashboardResource {
 
     @GET
     @Path("/transaction")
-    @Blocking
     public Uni<RestResponse<PagedResponse<TransactionResponse>>> getGoalsDashboard(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("pageSize") @DefaultValue("5") int pageSize,

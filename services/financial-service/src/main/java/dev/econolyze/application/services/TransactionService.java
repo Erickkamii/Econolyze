@@ -19,8 +19,10 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -57,9 +59,24 @@ public class TransactionService {
         final TransactionType finalType = typeEnum;
         final Category finalCategory = categoryEnum;
 
-        Uni<List<Transaction>> listUni = transactionRepository.findFiltered(userId, sort, finalType, finalCategory, page, size);
-        Uni<Long> countUni = transactionRepository.countFiltered(userId, finalType, finalCategory);
-        return PagedResponse.from(listUni, countUni, page, size, transactionMapper::mapToResponse);
+        return transactionRepository.findFiltered(userId, sort, finalType, finalCategory, page, size)
+                .chain(pagedList -> {
+                    if (pagedList.isEmpty()) {
+                        return Uni.createFrom().item(pagedList);
+                    }
+                    List<Long> ids = pagedList.stream().map(Transaction::getId).toList();
+                    return transactionRepository.findByIdsWithPayments(ids);
+                })
+                .chain(hydratedList ->
+                        transactionRepository.countFiltered(userId, finalType, finalCategory)
+                                .map(count -> {
+                                    int totalPages = (int) Math.ceil((double) count / size);
+                                    List<TransactionResponse> content = hydratedList.stream()
+                                            .map(transactionMapper::mapToResponse)
+                                            .toList();
+                                    return new PagedResponse<>(content, page, size, count, totalPages);
+                                })
+                );
     }
 
     @WithTransaction
@@ -105,6 +122,11 @@ public class TransactionService {
 
     @WithSession
     public Uni<TransactionResponse> getTransactionById(Long id) {
-        return transactionRepository.findTransactionById(id).map(transactionMapper::mapToResponse);
+        return transactionRepository.findById(id)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Transaction not found"))
+                .chain(transaction -> Mutiny.fetch(transaction.getPayments())
+                        .replaceWith(transaction)
+                )
+                .map(transactionMapper::mapToResponse);
     }
 }

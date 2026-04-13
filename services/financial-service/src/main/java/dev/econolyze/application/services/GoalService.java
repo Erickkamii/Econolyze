@@ -74,7 +74,7 @@ public class GoalService {
 
     private List<TransactionDTO> removeIfNotMatch(List<TransactionDTO> transactionDTOS, Long goalId){
         return transactionDTOS.stream()
-                .filter(t -> t.getFinancialGoalId().equals(goalId))
+                .filter(t -> t.getFinancialGoalId() != null && t.getFinancialGoalId().equals(goalId))
                 .toList();
     }
 
