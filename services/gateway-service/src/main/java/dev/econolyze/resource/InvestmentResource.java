@@ -2,7 +2,9 @@ package dev.econolyze.resource;
 
 import dev.econolyze.client.InvestmentClient;
 import dev.econolyze.dto.response.InvestmentProjectionResponse;
+import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -27,48 +29,34 @@ public class InvestmentResource {
     @Inject
     JsonWebToken jwt;
 
+    public boolean unauthorized(){
+        return jwt.getClaim("userId") == null;
+    }
+
     @GET
     @Path("/daily-cdi")
-    public RestResponse<InvestmentProjectionResponse> getDailyInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
-        if (jwt.getClaim("userId") == null) {
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return investmentClient.getDailyInvestmentProgress(authorization, percentage);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar projeção de investimento diária: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<InvestmentProjectionResponse>> getDailyInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return investmentClient.getDailyInvestmentProgress(headers.getHeaderString("Authorization"), percentage)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar projeção de investimento diário: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/monthly-cdi")
-    public RestResponse<InvestmentProjectionResponse> getMonthlyInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
-        if (jwt.getClaim("userId") == null) {
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return investmentClient.getMonthlyInvestmentProgress(authorization, percentage);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar projeção de investimento mensal: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<InvestmentProjectionResponse>> getMonthlyInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return investmentClient.getMonthlyInvestmentProgress(headers.getHeaderString("Authorization"), percentage)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar projeção de investimento mensal: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/annual-cdi")
-    public RestResponse<InvestmentProjectionResponse> getAnnualInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
-        if (jwt.getClaim("userId") == null) {
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return investmentClient.getAnnualInvestmentProgress(authorization, percentage);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar projeção de investimento anual: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<InvestmentProjectionResponse>> getAnnualInvestmentProgress(@Context HttpHeaders headers, @RestQuery("percentage") BigDecimal percentage) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return investmentClient.getAnnualInvestmentProgress(headers.getHeaderString("Authorization"), percentage)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar projeção de investimento anual: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 }

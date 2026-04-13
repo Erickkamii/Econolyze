@@ -3,7 +3,9 @@ package dev.econolyze.resource;
 import dev.econolyze.client.PaymentClient;
 import dev.econolyze.dto.request.PaymentRequest;
 import dev.econolyze.dto.response.PaymentResponse;
+import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -31,52 +33,34 @@ public class PaymentResource {
     @Inject
     JsonWebToken jwt;
 
+    private boolean unauthorized(){
+        return jwt.getClaim("userId") == null;
+    }
+
     @POST
     @Path("/payment")
-    public RestResponse<PaymentResponse> payment(@Context HttpHeaders headers, PaymentRequest request){
-        if (jwt.getClaim("userId") == null){
-            LOG.warn("JWT inválido: claim userId ausente");
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return paymentClient.createPayment(authorization, request);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<PaymentResponse>> payment(@Context HttpHeaders headers, PaymentRequest request){
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return paymentClient.createPayment(headers.getHeaderString("Authorization"), request)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar pagamento: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service",e));
     }
 
     @GET
     @Path("/payment/{id}")
-    public RestResponse<PaymentResponse> getPaymentById(@Context HttpHeaders headers, @PathParam("id") Long id){
-        if (jwt.getClaim("userId") == null){
-            LOG.warn("JWT inválido: claim userId ausente");
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return paymentClient.getPaymentById(authorization, id);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-
-        }
+    public Uni<RestResponse<PaymentResponse>> getPaymentById(@Context HttpHeaders headers, @PathParam("id") Long id){
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return paymentClient.getPaymentById(headers.getHeaderString("Authorization"), id)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/payment/transaction/{transactionId}")
-    public RestResponse<List<PaymentResponse>> getPaymentByTransactionId(@Context HttpHeaders headers, @PathParam("transactionId") Long transactionId){
-        if (jwt.getClaim("userId") == null){
-            LOG.warn("JWT inválido: claim userId ausente");
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return paymentClient.getPaymentsByTransactionId(authorization, transactionId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<List<PaymentResponse>>> getPaymentByTransactionId(@Context HttpHeaders headers, @PathParam("transactionId") Long transactionId){
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return paymentClient.getPaymentsByTransactionId(headers.getHeaderString("Authorization"), transactionId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 }

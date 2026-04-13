@@ -4,7 +4,9 @@ import dev.econolyze.client.GoalClient;
 import dev.econolyze.dto.request.FinancialGoalRequest;
 import dev.econolyze.dto.response.FinancialGoalResponse;
 import dev.econolyze.dto.response.GoalProgressResponse;
+import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -28,48 +30,34 @@ public class GoalResource {
     @Inject
     JsonWebToken jwt;
 
+    private boolean unauthorized(){
+        return jwt.getClaim("userId") == null;
+    }
+
     @POST
     @Path("/create")
-    public RestResponse<FinancialGoalResponse> createGoal(@Context HttpHeaders headers, FinancialGoalRequest request) {
-        if (jwt.getClaim("userId") == null){
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return goalClient.createGoal(authorization, request);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<FinancialGoalResponse>> createGoal(@Context HttpHeaders headers, FinancialGoalRequest request) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return goalClient.createGoal(headers.getHeaderString("Authorization"), request)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar meta: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/{goalId}")
-    public RestResponse<FinancialGoalResponse> getGoalById(@Context HttpHeaders headers, @PathParam("goalId") Long goalId) {
-        if (jwt.getClaim("userId") == null) {
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return goalClient.getGoalById(authorization, goalId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<FinancialGoalResponse>> getGoalById(@Context HttpHeaders headers, @PathParam("goalId") Long goalId) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return goalClient.getGoalById(headers.getHeaderString("Authorization"), goalId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar meta: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/progress/{goalId}")
-    public RestResponse<GoalProgressResponse> getGoalProgress(@Context HttpHeaders headers, @PathParam("goalId") Long goalId) {
-        if (jwt.getClaim("userId") == null) {
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-            }
-        String authorization = headers.getHeaderString("Authorization");
-        try {
-            return goalClient.getGoalProgress(authorization, goalId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar pagamento: %s", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public Uni<RestResponse<GoalProgressResponse>> getGoalProgress(@Context HttpHeaders headers, @PathParam("goalId") Long goalId) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return goalClient.getGoalProgress(headers.getHeaderString("Authorization"), goalId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar progresso da meta: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 }

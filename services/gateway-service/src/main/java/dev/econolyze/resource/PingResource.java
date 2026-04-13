@@ -11,5 +11,4 @@ public class PingResource {
         return RestResponse.ok("pong");
     }
 }
-// ...existing code...
 

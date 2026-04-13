@@ -1,16 +1,14 @@
 package dev.econolyze.client;
 
 import dev.econolyze.dto.response.BalanceResponse;
-import dev.econolyze.dto.response.GoalProgressResponse;
 import dev.econolyze.dto.response.InvestmentProjectionResponse;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.Path;
+import dev.econolyze.dto.response.PagedResponse;
+import dev.econolyze.dto.response.TransactionResponse;
+import io.smallrye.mutiny.Uni;
+import jakarta.ws.rs.*;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.reactive.RestResponse;
-
-import java.util.List;
 
 @Path("/api/dashboard")
 @RegisterRestClient(configKey = "financial-service")
@@ -18,17 +16,19 @@ import java.util.List;
 public interface DashboardClient {
     @GET
     @Path("/balance")
-    RestResponse<BalanceResponse> getBalance(
+    Uni<RestResponse<BalanceResponse>> getBalance(
             @HeaderParam("Authorization") String authorization
     );
     @GET
     @Path("/investment")
-    RestResponse<InvestmentProjectionResponse> getMonthlyCdiDashboard(
+    Uni<RestResponse<InvestmentProjectionResponse>> getMonthlyCdiDashboard(
             @HeaderParam("Authorization") String authorization
     );
     @GET
-    @Path("/goals")
-    RestResponse<List<GoalProgressResponse>> getGoalsDashboard(
-            @HeaderParam("Authorization") String authorization
+    @Path("/transaction")
+    Uni<RestResponse<PagedResponse<TransactionResponse>>> getTransactions(
+            @HeaderParam("Authorization") String authorization,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("pageSize") @DefaultValue("10") int pageSize
     );
 }

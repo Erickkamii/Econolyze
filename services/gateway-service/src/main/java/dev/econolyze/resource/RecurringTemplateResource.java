@@ -9,8 +9,8 @@ import dev.econolyze.dto.response.RecurringTemplateSummaryResponse;
 import dev.econolyze.dto.response.TransactionResponse;
 import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.json.JsonNumber;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -34,187 +34,120 @@ public class RecurringTemplateResource {
     @Inject
     JsonWebToken jwt;
 
+    private boolean unauthorized(){
+        return jwt.getClaim("userId") == null;
+    }
+
     @POST
     @Path("/recurring")
-    public RestResponse<RecurringTemplateResponse> createRecurring(@Context HttpHeaders headers,
-                                                                   RecurringTemplateRequest request)
+    public Uni<RestResponse<RecurringTemplateResponse>> createRecurring(@Context HttpHeaders headers,
+                                                                        RecurringTemplateRequest request)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.createRecurringTemplate(authorization, request);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.createRecurringTemplate(headers.getHeaderString("Authorization"), request)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @PUT
     @Path("/recurring/{templateId}")
-    public RestResponse<RecurringTemplateResponse> updateRecurring(@Context HttpHeaders headers,
+    public Uni<RestResponse<RecurringTemplateResponse>> updateRecurring(@Context HttpHeaders headers,
                                                                    UpdateRecurringRequest request,
                                                                    @PathParam("templateId") Long templateId)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.updateRecurringTemplate(authorization, templateId, request);
-            } catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.updateRecurringTemplate(headers.getHeaderString("Authorization"), templateId, request)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @PATCH
     @Path("/recurring/{templateId}/toggle")
-    public RestResponse<RecurringTemplateResponse> toggleRecurring(@Context HttpHeaders headers,
+    public Uni<RestResponse<RecurringTemplateResponse>> toggleRecurring(@Context HttpHeaders headers,
                                                                    @PathParam("templateId") Long templateId)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.toggleRecurring(authorization, templateId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.toggleRecurring(headers.getHeaderString("Authorization"), templateId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring")
-    public RestResponse<List<RecurringTemplateResponse>> getAllRecurring(@Context HttpHeaders headers)
+    public Uni<RestResponse<List<RecurringTemplateResponse>>> getAllRecurring(@Context HttpHeaders headers)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getAllRecurringTemplates(authorization);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getAllRecurringTemplates(headers.getHeaderString("Authorization"))
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring/{templateId}")
-    public RestResponse<RecurringTemplateResponse> getRecurringById(@Context HttpHeaders headers,
+    public Uni<RestResponse<RecurringTemplateResponse>> getRecurringById(@Context HttpHeaders headers,
                                                                    @PathParam("templateId") Long templateId)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getRecurringTemplateById(authorization, templateId);
-        }
-        catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service");
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getRecurringTemplateById(headers.getHeaderString("Authorization"), templateId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring/{templateId}/history")
-    public RestResponse<PagedResponse<TransactionResponse>> getRecurringHistory(@Context HttpHeaders httpHeaders,
+    public Uni<RestResponse<PagedResponse<TransactionResponse>>> getRecurringHistory(@Context HttpHeaders httpHeaders,
                                                                  @PathParam("templateId") Long templateId){
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = httpHeaders.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getRecurringHistory(authorization, templateId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar recorrencia: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getRecurringHistory(httpHeaders.getHeaderString("Authorization"), templateId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring/{templateId}/summary")
-    public RestResponse<RecurringTemplateSummaryResponse> getRecurringSummary(@Context HttpHeaders headers,
+    public Uni<RestResponse<RecurringTemplateSummaryResponse>> getRecurringSummary(@Context HttpHeaders headers,
                                                                               @PathParam("templateId") Long templateId){
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getRecurringSummary(authorization, templateId);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar recorrencia: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getRecurringSummary(headers.getHeaderString("Authorization"), templateId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring/{templateId}/preview")
-    public RestResponse<PagedResponse<LocalDate>> getRecurringPreview(@Context HttpHeaders headers,
+    public Uni<RestResponse<PagedResponse<LocalDate>>> getRecurringPreview(@Context HttpHeaders headers,
                                                                       @PathParam("templateId") Long templateId,
                                                                       @QueryParam("page") @DefaultValue("0") int page,
                                                                       @QueryParam("pageSize") @DefaultValue("20") int pageSize)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getRecurringPreview(authorization, templateId, page, pageSize);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar recorrencia: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getRecurringPreview(headers.getHeaderString("Authorization"), templateId, page, pageSize)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @GET
     @Path("/recurring/{templateId}/preview/full")
-    public RestResponse<PagedResponse<LocalDate>> getRecurringPreviewFull(@Context HttpHeaders headers,
+    public Uni<RestResponse<PagedResponse<LocalDate>>> getRecurringPreviewFull(@Context HttpHeaders headers,
                                                                           @PathParam("templateId") Long templateId,
                                                                           @QueryParam("page") @DefaultValue("0") int page,
                                                                           @QueryParam("pageSize") @DefaultValue("20") int pageSize)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.getRecurringPreviewFull(authorization, templateId, page, pageSize);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao criar recorrencia: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.getRecurringPreviewFull(headers.getHeaderString("Authorization"), templateId, page, pageSize)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
     @DELETE
     @Path("/recurring/{templateId}")
-    public RestResponse<Void> deleteRecurring(@Context HttpHeaders headers,
+    public Uni<RestResponse<Void>> deleteRecurring(@Context HttpHeaders headers,
                                               @PathParam("templateId") Long templateId)
     {
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        String authorization = headers.getHeaderString("Authorization");
-        if (userIdClaim == null) {
-            throw new ServiceUnavailableException("financial-service");
-        }
-        try {
-            return recurrencyClient.deleteRecurringTemplate(authorization, templateId);
-            } catch (Exception e) {
-            LOG.errorf("Erro ao criar transação: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return recurrencyClient.deleteRecurringTemplate(headers.getHeaderString("Authorization"), templateId)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 
 }

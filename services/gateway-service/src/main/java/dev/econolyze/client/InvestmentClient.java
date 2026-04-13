@@ -1,6 +1,7 @@
 package dev.econolyze.client;
 
 import dev.econolyze.dto.response.InvestmentProjectionResponse;
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
@@ -18,19 +19,19 @@ public interface InvestmentClient {
 
     @GET
     @Path("/goal/daily-cdi")
-    RestResponse<InvestmentProjectionResponse> getDailyInvestmentProgress(
+    Uni<RestResponse<InvestmentProjectionResponse>> getDailyInvestmentProgress(
             @HeaderParam("Authorization") String authorization,
             @RestQuery("percentage") BigDecimal percentage
     );
     @GET
     @Path("/goal/monthly-cdi")
-    RestResponse<InvestmentProjectionResponse> getMonthlyInvestmentProgress(
+    Uni<RestResponse<InvestmentProjectionResponse>> getMonthlyInvestmentProgress(
             @HeaderParam("Authorization") String authorization,
             @RestQuery("percentage") BigDecimal percentage
     );
     @GET
     @Path("/goal/annual-cdi")
-    RestResponse<InvestmentProjectionResponse> getAnnualInvestmentProgress(
+    Uni<RestResponse<InvestmentProjectionResponse>> getAnnualInvestmentProgress(
             @HeaderParam("Authorization") String authorization,
             @RestQuery("percentage") BigDecimal percentage
     );

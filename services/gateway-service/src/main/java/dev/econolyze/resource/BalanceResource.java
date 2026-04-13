@@ -4,8 +4,8 @@ import dev.econolyze.client.BalanceClient;
 import dev.econolyze.dto.response.BalanceResponse;
 import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.json.JsonNumber;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
@@ -28,19 +28,10 @@ public class BalanceResource {
     JsonWebToken jwt;
     @GET
     @Path("/balance")
-    public RestResponse<BalanceResponse> getBalance(@Context HttpHeaders headers) {
-        String authorization = headers.getHeaderString("Authorization");
-        JsonNumber userIdClaim = jwt.getClaim("userId");
-        if (userIdClaim == null) {
-            LOG.warn("JWT inválido: claim userId ausente");
-            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
-        }
-
-        try {
-            return balanceClient.getBalance(authorization);
-        } catch (Exception e) {
-            LOG.errorf("Erro ao buscar saldo: %s", e.getMessage());
-            throw new ServiceUnavailableException("financial-service", e);
-        }
+    public Uni<RestResponse<BalanceResponse>> getBalance(@Context HttpHeaders headers) {
+        if(jwt.getClaim("userId") == null) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return balanceClient.getBalance(headers.getHeaderString("Authorization"))
+                .onFailure().invoke(e -> LOG.errorf("Erro ao buscar saldo: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 }

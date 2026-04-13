@@ -3,6 +3,7 @@ package dev.econolyze.client;
 import dev.econolyze.dto.request.AccountRequest;
 import dev.econolyze.dto.request.UpdateAccountRequest;
 import dev.econolyze.dto.response.AccountResponse;
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.*;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -16,14 +17,14 @@ import java.util.List;
 public interface AccountClient {
     @POST
     @Path("/accounts")
-    RestResponse<AccountResponse> createAccount(
+    Uni<RestResponse<AccountResponse>> createAccount(
             @HeaderParam("Authorization") String authorization,
             AccountRequest request
     );
 
     @PUT
     @Path("/accounts/{accountId}")
-    RestResponse<AccountResponse> updateAccount(
+    Uni<RestResponse<AccountResponse>> updateAccount(
             @HeaderParam("Authorization") String authorization,
             @PathParam("accountId") Long accountId,
             UpdateAccountRequest request
@@ -31,21 +32,21 @@ public interface AccountClient {
 
     @DELETE
     @Path("/accounts/{accountId}")
-    RestResponse<Void> deleteAccount(
+    Uni<RestResponse<Void>> deleteAccount(
             @HeaderParam("Authorization") String authorization,
             @PathParam("accountId") Long accountId
     );
 
     @GET
     @Path("/accounts/{accountId}")
-    RestResponse<AccountResponse> getAccountById(
+    Uni<RestResponse<AccountResponse>> getAccountById(
             @HeaderParam("Authorization") String authorization,
             @PathParam("accountId") Long accountId
     );
 
     @GET
     @Path("/accounts")
-    RestResponse<List<AccountResponse>> getAllAccounts(
+    Uni<RestResponse<List<AccountResponse>>> getAllAccounts(
             @HeaderParam("Authorization") String authorization
     );
 
