@@ -12,15 +12,31 @@ const AUTH_PATH = "/auth";
 
 
 export class AuthService {
-    private static async post<T>(path: string, body?: any): Promise<T> {
+    private static async post<T>(
+        path: string,
+        body?: any,
+        authToken?: string
+    ): Promise<T> {
         const url = `${API_BASE}${AUTH_PATH}${path}`;
-
-        const response = await fetch(url, {
+        const init: RequestInit = {
             method: "POST",
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body ?? {}),
-        });
+            headers: {},
+        };
+
+        if (body !== undefined) {
+            (init.headers as Record<string, string>)["Content-Type"] = "application/json";
+            init.body = JSON.stringify(body);
+        }
+
+        if (authToken) {
+            (init.headers as Record<string, string>)["Authorization"] =
+                authToken.startsWith("Bearer ")
+                    ? authToken
+                    : `Bearer ${authToken}`;
+        }
+
+        const response = await fetch(url, init);
 
         if (!response.ok) {
             const text = await response.text();
@@ -40,7 +56,12 @@ export class AuthService {
             throw error;
         }
 
-        return (await response.json()) as T;
+        if (response.status === 204 || response.status === 205) {
+            return undefined as T;
+        }
+
+        const responseText = await response.text();
+        return responseText ? (JSON.parse(responseText) as T) : (undefined as T);
     }
 
     static async login(payload: LoginRequest): Promise<LoginResponse> {
@@ -63,7 +84,11 @@ export class AuthService {
             throw new Error("No refresh token available");
         }
 
-        const data = await this.post<RefreshResponse>("/refresh", { refreshToken });
+        const authorization = refreshToken.startsWith("Bearer ")
+            ? refreshToken
+            : `Bearer ${refreshToken}`;
+
+        const data = await this.post<RefreshResponse>("/refresh", undefined, authorization);
 
         if (data.authToken) TokenStore.setAccess(data.authToken);
         if (data.refreshToken) TokenStore.setRefresh(data.refreshToken);
@@ -75,12 +100,21 @@ export class AuthService {
     static async logout(): Promise<void> {
         const refreshToken = TokenStore.getRefresh();
 
-        try {
-            await this.post("/logout", { refreshToken });
-        } catch (error) {
-            console.warn("Logout API error:", error);
+        if (!refreshToken) {
+            TokenStore.clear();
+            return;
         }
 
-        TokenStore.clear();
+        const authorization = refreshToken.startsWith("Bearer ")
+            ? refreshToken
+            : `Bearer ${refreshToken}`;
+
+        try {
+            await this.post<void>("/logout", undefined, authorization);
+        } catch (error) {
+            console.warn("Logout API error:", error);
+        } finally {
+            TokenStore.clear();
+        }
     }
 }
