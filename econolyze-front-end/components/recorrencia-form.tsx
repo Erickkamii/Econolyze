@@ -22,7 +22,7 @@ import { RecurringService } from "@/lib/services/recurring.service"
 import type { RecurringTemplate } from "@/lib/types/recurring.types"
 
 const CATEGORIES = [
-  { value: "HOUSING", label: "Moradia" },
+  { value: "HOUSEHOLD", label: "Moradia" },
   { value: "TRANSPORT", label: "Transporte" },
   { value: "FOOD", label: "Alimentação" },
   { value: "LEISURE", label: "Lazer" },

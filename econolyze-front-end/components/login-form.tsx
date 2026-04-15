@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/auth.context";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {toast} from "sonner";
 
 export function LoginForm() {
-    const router = useRouter();
     const { login } = useAuth()
 
     const [username, setUsername] = useState("");
@@ -29,7 +27,6 @@ export function LoginForm() {
                 description: `Usuário: ${username}`,
                 duration: 4000
             });
-            router.push("/carteira");
         } catch (err: any) {
             setError(err?.message ?? "Erro ao fazer login");
             toast.error("Erro ao fazer login", {
@@ -72,7 +69,7 @@ export function LoginForm() {
                     </div>
 
                     {error && (
-                        <p className="text-red-500 text-sm">{error}</p>
+                        <p className="text-sm text-destructive" role="alert" aria-live="polite">{error}</p>
                     )}
 
                     <Button type="submit" className="w-full" size="lg" disabled={loading}>

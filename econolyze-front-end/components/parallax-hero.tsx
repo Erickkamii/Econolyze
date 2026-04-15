@@ -1,16 +1,17 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 
 export function ParallaxHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [scrollY, setScrollY] = useState(0)
+  const scrollYRef = useRef(0)
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY)
+      scrollYRef.current = window.scrollY
     }
 
+    handleScroll()
     window.addEventListener("scroll", handleScroll)
     return () => {
       window.removeEventListener("scroll", handleScroll)
@@ -43,7 +44,7 @@ export function ParallaxHero() {
       ctx.fillStyle = "#000000"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      const parallaxOffset = scrollY * 0.5
+      const parallaxOffset = scrollYRef.current * 0.5
 
       time += 0.01
 
@@ -131,11 +132,11 @@ export function ParallaxHero() {
       cancelAnimationFrame(animationFrame)
       window.removeEventListener("resize", resizeCanvas)
     }
-  }, [scrollY])
+  }, [])
 
   return (
     <div className="relative h-[600px] overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
 
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background pointer-events-none" />
     </div>

@@ -11,6 +11,7 @@ import {
     isIncomeTransaction,
     formatCurrency,
 } from "@/lib/utils/transaction-mappers";
+import { HelpCircle } from "lucide-react";
 
 type Props = {
     list?: Transaction[];
@@ -46,7 +47,7 @@ export function UltimasTransacoes({ list = [], loading = false }: Props) {
                     ) : (
                         list.map((transaction) => {
                             const category = transaction.category ?? "OTHER";
-                            const Icon = TRANSACTION_ICON_MAP[category];
+                            const Icon = TRANSACTION_ICON_MAP[category] || HelpCircle;
                             const categoryLabel = TRANSACTION_LABEL_MAP[category];
 
                             const isIncome = isIncomeTransaction(transaction.type);
@@ -63,14 +64,14 @@ export function UltimasTransacoes({ list = [], loading = false }: Props) {
                                 >
                                     <div
                                         className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                                            isIncome ? "bg-success/20" : "bg-muted"
+                                            isIncome ? "bg-success/20" : "bg-destructive/20"
                                         }`}
                                     >
                                         <Icon
                                             className={`h-5 w-5 ${
                                                 isIncome
                                                     ? "text-success"
-                                                    : "text-muted-foreground"
+                                                    : "text-destructive"
                                             }`}
                                         />
                                     </div>
@@ -86,7 +87,7 @@ export function UltimasTransacoes({ list = [], loading = false }: Props) {
 
                                     <div
                                         className={`text-sm font-semibold ${
-                                            isIncome ? "text-success" : "text-foreground"
+                                            isIncome ? "text-success" : "text-destructive"
                                         }`}
                                     >
                                         {isIncome ? "+" : "-"} R$ {formatCurrency(amount)}

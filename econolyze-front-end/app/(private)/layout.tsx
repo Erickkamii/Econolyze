@@ -1,24 +1,35 @@
 "use client";
 
 import { useAuth } from "@/context/auth.context";
-import { redirect } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading } = useAuth();
+    const router = useRouter();
 
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace("/login");
+        }
+    }, [isAuthenticated, isLoading, router]);
 
-    if (isLoading) {
+    if (isLoading || !isAuthenticated) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Skeleton className="h-10 w-40" />
-                <p className="ml-2 text-muted-foreground">Carregando...</p>
+            <div className="flex min-h-screen items-center justify-center px-6">
+                <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <p className="text-sm text-muted-foreground">
+                            Validando sua sessão...
+                        </p>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    if (!isAuthenticated) {
-        redirect("/login");
-    }
     return <>{children}</>;
 }

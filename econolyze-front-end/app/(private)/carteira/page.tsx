@@ -11,10 +11,8 @@ import { SaldoCard } from "@/components/saldo-card";
 import { AcoesRapidas } from "@/components/acoes-rapidas";
 import { UltimasTransacoes } from "@/components/ultimas-transacoes";
 import { ChatbotButton } from "@/components/chatbot-button";
-import { TransactionService } from "@/lib/services/transaction.service";
+import { apiRequest } from "@/lib/services/api-client";
 import type { Transaction } from "@/lib/types/transaction.types";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ?? "";
 
 export default function CarteiraPage() {
     const { logout, isLoading, accessToken } = useAuth();
@@ -41,28 +39,23 @@ export default function CarteiraPage() {
         async function load() {
             setLoading(true);
             try {
-                const dashboardRes = await fetch(`${API_BASE}/dashboard`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json",
+                const dashboardData = await apiRequest<{
+                    balance?: { balance?: number };
+                    transactions?: Transaction[];
+                }>(
+                    "/dashboard",
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
                     },
-                });
+                    "Erro ao carregar dashboard."
+                );
 
-                if (!dashboardRes.ok) {
-                    toast.error("Erro ao carregar dashboard.");
-                    return;
-                }
-
-                const dashboardData = await dashboardRes.json();
-
-                // Seta os dados diretamente (já vem ordenado do backend)
                 setSaldo(dashboardData.balance?.balance ?? 0);
-
-                // Limita em 5 transações mais recentes
-                const allTransactions = dashboardData.transactions ?? [];
-                setTransactions(allTransactions.slice(0, 5));
-            } catch (e) {
-                toast.error("Erro inesperado.");
+                setTransactions((dashboardData.transactions ?? []).slice(0, 5));
+            } catch (error: any) {
+                toast.error(error?.message ?? "Erro inesperado.");
             } finally {
                 setLoading(false);
             }

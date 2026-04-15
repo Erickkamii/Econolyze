@@ -1,12 +1,14 @@
 import {
-    Coffee,
-    Zap,
     Briefcase,
-    Minus,
     Wallet,
     Shield,
-    Heart,
     type LucideIcon,
+    TreePalm,
+    DollarSign,
+    Car,
+    Hospital,
+    Utensils,
+    House,
 } from "lucide-react";
 import {TransactionCategory} from "@/lib/types/transaction.types";
 
@@ -14,13 +16,14 @@ import {TransactionCategory} from "@/lib/types/transaction.types";
  * Mapa de ícones por categoria
  */
 export const TRANSACTION_ICON_MAP: Record<TransactionCategory, LucideIcon> = {
-    FOOD: Coffee,
-    HOUSEHOLD: Wallet,
-    TRANSPORT: Zap,
-    HEALTH: Heart,
+    FOOD: Utensils,
+    HOUSEHOLD: House,
+    TRANSPORT: Car,
+    HEALTH: Hospital,
     INSURANCE: Shield,
     UTILITIES: Briefcase,
-    OTHER: Minus,
+    LEISURE: TreePalm,
+    OTHER: DollarSign,
 };
 
 /**
@@ -33,6 +36,7 @@ export const TRANSACTION_LABEL_MAP: Record<TransactionCategory, string> = {
     HEALTH: "Saúde",
     INSURANCE: "Seguros",
     UTILITIES: "Contas e Serviços",
+    LEISURE: "Lazer",
     OTHER: "Outras Despesas",
 };
 
@@ -40,13 +44,15 @@ export const TRANSACTION_LABEL_MAP: Record<TransactionCategory, string> = {
  * Categorias do formulário (UI)
  */
 export const FORM_CATEGORIES = [
-    { value: "alimentacao", label: "🍽️ Alimentação" },
-    { value: "transporte", label: "🚗 Transporte" },
-    { value: "lazer", label: "🎮 Lazer" },
-    { value: "compras", label: "🛍️ Compras" },
-    { value: "contas", label: "💡 Contas" },
-    { value: "salario", label: "💼 Salário" },
-    { value: "freelance", label: "💻 Freelance" },
+    { value: "alimentacao", label: "Alimentação" },
+    { value: "transporte", label: "Transporte" },
+    { value: "lazer", label: "Lazer" },
+    { value: "compras", label: "Compras" },
+    { value: "contas", label: "Contas" },
+    { value: "salario", label: "Salário" },
+    { value: "freelance", label: "Freelance" },
+    { value: "investimentos", label: "Investimentos" },
+    { value: "outros", label: "Outros" },
 ] as const;
 
 /**

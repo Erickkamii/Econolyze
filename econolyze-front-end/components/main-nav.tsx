@@ -17,9 +17,12 @@ export function MainNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+    <nav
+      className="fixed bottom-0 left-0 right-0 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
+      aria-label="Navegacao principal"
+    >
       <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-around h-16">
+        <div className="flex h-16 items-center justify-around pb-[max(env(safe-area-inset-bottom),0px)]">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -28,9 +31,10 @@ export function MainNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-6 py-2 rounded-lg transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  "flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-all duration-200",
+                  isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
                 )}
               >
                 <Icon className="h-5 w-5" />

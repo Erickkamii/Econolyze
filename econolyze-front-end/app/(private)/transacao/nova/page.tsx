@@ -19,11 +19,11 @@ function NovaTransacaoContent() {
         <div className="min-h-screen pb-20">
             <div className="max-w-2xl mx-auto p-6 space-y-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/carteira">
-                        <Button variant="ghost" size="icon">
+                    <Button asChild variant="ghost" size="icon">
+                        <Link href="/carteira" aria-label="Voltar para carteira">
                             <ArrowLeft className="h-5 w-5" />
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                     <h1 className="text-2xl font-bold">Registrar Transação</h1>
                 </div>
 

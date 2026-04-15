@@ -1,12 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { MainNav } from "@/components/main-nav";
 import { ChatbotButton } from "@/components/chatbot-button";
@@ -35,16 +37,16 @@ export default function TransacaoDetalhesPage({ params }: PageProps) {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!accessToken || isNaN(transactionId)) return;
+    if (!accessToken || Number.isNaN(transactionId)) return;
 
     async function loadTransaction() {
       setLoading(true);
       try {
         const data = await TransactionService.getById(transactionId, accessToken);
         setTransaction(data);
-      } catch {
-        toast.error("Erro ao carregar transação");
-        router.push("/historico");
+      } catch (error: any) {
+        toast.error(error?.message ?? "Erro ao carregar transacao");
+        router.replace("/historico");
       } finally {
         setLoading(false);
       }
@@ -53,111 +55,118 @@ export default function TransacaoDetalhesPage({ params }: PageProps) {
     loadTransaction();
   }, [accessToken, transactionId, router]);
 
+  async function handleDelete() {
+    if (!accessToken || !transaction) return;
+
+    setDeleting(true);
+    try {
+      await TransactionService.delete(transaction.id, accessToken);
+      toast.success("Transacao excluida com sucesso!");
+      router.replace("/historico");
+    } catch (error: any) {
+      toast.error(error?.message ?? "Erro ao excluir transacao");
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-6 pb-32">
+        <div className="mx-auto max-w-2xl space-y-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <Skeleton className="h-7 w-48" />
+          </div>
+          <Skeleton className="h-[420px] w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
   if (!transaction) return null;
 
   const category = transaction.category ?? "OTHER";
   const Icon = TRANSACTION_ICON_MAP[category];
-
   const isIncome = isIncomeTransaction(transaction.type);
-  const amount =
-      typeof transaction.amount === "number"
-          ? transaction.amount
-          : Number(transaction.amount ?? 0);
+  const amount = typeof transaction.amount === "number"
+    ? transaction.amount
+    : Number(transaction.amount ?? 0);
 
   return (
-      <div className="min-h-screen p-6 pb-32 max-w-2xl mx-auto relative">
-
-        {/* HEADER */}
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => router.back()}>
-            <ArrowLeft className="h-6 w-6 text-white" />
-          </button>
-          <h1 className="text-xl font-semibold text-white">
-            Detalhes da Transação
-          </h1>
+    <div className="relative mx-auto min-h-screen max-w-2xl p-6 pb-32">
+      <div className="mb-6 flex items-center gap-3">
+        <Button asChild variant="ghost" size="icon">
+          <Link href="/historico" aria-label="Voltar para historico">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-xl font-semibold">Detalhes da Transacao</h1>
+          <p className="text-sm text-muted-foreground">Revise, edite ou remova este lancamento.</p>
         </div>
+      </div>
 
-        {/* CARD */}
-        <Card className="bg-[#0f0f11] border border-[#1a1a1d] rounded-2xl text-white shadow-xl">
-          <CardContent className="p-6 space-y-6">
-
-            {/* Ícone + Nome */}
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full bg-[#1c1c1f] flex items-center justify-center">
-                <Icon className="h-7 w-7 text-gray-300" />
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-lg font-medium">{transaction.description}</span>
-                <span className="text-sm text-gray-400">
-                {TRANSACTION_LABEL_MAP[category]}
-              </span>
-              </div>
+      <Card className="border-border/60 bg-card/95 shadow-xl backdrop-blur">
+        <CardContent className="space-y-6 p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
+              <Icon className="h-7 w-7 text-primary" />
             </div>
 
-            {/* Valor */}
-            <div className="flex justify-between items-center border-t border-[#1f1f23] pt-4">
-              <span className="text-gray-400">Valor</span>
-              <span
-                  className={`text-2xl font-bold ${
-                      isIncome ? "text-green-400" : "text-red-500"
-                  }`}
-              >
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-lg font-medium">{transaction.description ?? "Sem descricao"}</span>
+              <span className="text-sm text-muted-foreground">{TRANSACTION_LABEL_MAP[category]}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <span className="text-muted-foreground">Valor</span>
+            <span className={`text-2xl font-bold ${isIncome ? "text-success" : "text-destructive"}`}>
               {isIncome ? "+" : "-"} R$ {formatCurrency(amount)}
             </span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <span className="text-muted-foreground">Data</span>
+            <span>{transaction.date ? new Date(transaction.date).toLocaleDateString("pt-BR") : "-"}</span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <span className="text-muted-foreground">Metodo</span>
+            <span>{transaction.method ?? "-"}</span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <span className="text-muted-foreground">Conta</span>
+            <span>{transaction.accountId ? `#${transaction.accountId}` : "Nao informada"}</span>
+          </div>
+
+          {transaction.description && (
+            <div className="border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground">Observacoes</span>
+              <p className="mt-1 text-foreground">{transaction.description}</p>
             </div>
+          )}
 
-            {/* Data */}
-            <div className="flex justify-between items-center border-t border-[#1f1f23] pt-4">
-              <span className="text-gray-400">Data</span>
-              <span>{transaction.date? new Date(transaction.date).toLocaleDateString("pt-BR"): "-"}</span>
-            </div>
+          <div className="space-y-3 border-t border-border pt-4">
+            <Button asChild className="w-full" variant="secondary">
+              <Link href={`/historico/${transaction.id}/editar`}>Editar Transacao</Link>
+            </Button>
 
-            {/* Hora */}
-            {/*<div className="flex justify-between items-center border-t border-[#1f1f23] pt-4">*/}
-            {/*  <span className="text-gray-400">Hora</span>*/}
-            {/*  <span>*/}
-            {/*  {new Date(transaction.date).toLocaleTimeString("pt-BR", {*/}
-            {/*    hour: "2-digit",*/}
-            {/*    minute: "2-digit",*/}
-            {/*  })}*/}
-            {/*</span>*/}
-            {/*</div>*/}
+            <Button
+              className="w-full"
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? "Excluindo..." : "Excluir Transacao"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* Conta */}
-            <div className="flex justify-between items-center border-t border-[#1f1f23] pt-4">
-              <span className="text-gray-400">Conta</span>
-              <span>{transaction.method ?? "-"}</span>
-            </div>
-
-            {/* Observações */}
-            {transaction.description && (
-                <div className="border-t border-[#1f1f23] pt-4">
-                  <span className="text-gray-400 text-sm">Observações</span>
-                  <p className="text-gray-200 mt-1">
-                    {transaction.description}
-                  </p>
-                </div>
-            )}
-
-            {/* Botões */}
-            <div className="space-y-3 pt-4 border-t border-[#1f1f23]">
-              <Button className="w-full bg-[#1f1f23] hover:bg-[#2a2a2e]">
-                Editar Transação
-              </Button>
-
-              <Button
-                  className="w-full bg-red-600 hover:bg-red-700"
-                  onClick={() => alert("Excluir")}
-              >
-                Excluir Transação
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <MainNav />
-        <ChatbotButton />
-      </div>
+      <MainNav />
+      <ChatbotButton />
+    </div>
   );
 }

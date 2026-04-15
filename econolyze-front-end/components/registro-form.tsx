@@ -42,9 +42,7 @@ export function RegistroForm() {
                 description: `Usuário: ${response.username}`,
                 duration: 4000,
             });
-            setTimeout(() => {
-                router.push("/login");
-            }, 1000);
+            router.push("/login");
         } catch (err: any) {
             setError(err?.message ?? "Erro ao registrar");
             toast.error("Erro ao criar conta", {
@@ -112,7 +110,11 @@ export function RegistroForm() {
                         />
                     </div>
 
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                    {error && (
+                        <p className="text-sm text-destructive" role="alert" aria-live="polite">
+                            {error}
+                        </p>
+                    )}
 
                     <Button type="submit" className="w-full" size="lg" disabled={loading}>
                         {loading ? "Criando conta..." : "Registrar"}

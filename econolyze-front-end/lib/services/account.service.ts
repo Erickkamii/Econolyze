@@ -4,9 +4,7 @@ import type {
     UpdateAccountPayload,
     AccountResponse,
 } from "@/lib/types/account.types";
-
-const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ?? "";
+import { apiRequest } from "@/lib/services/api-client";
 
 export class AccountService {
     private static readonly ACCOUNT_PATH = "/account";
@@ -20,33 +18,13 @@ export class AccountService {
             throw new Error("Access token is required");
         }
 
-        const response = await fetch(`${API_BASE}${path}`, {
+        return apiRequest<T>(path, {
             ...options,
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
                 ...(options.headers || {}),
             },
         });
-
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-
-            const error: any = new Error(
-                body?.message ?? "Erro na requisição"
-            );
-
-            error.status = response.status;
-            error.details = body;
-
-            throw error;
-        }
-
-        if (response.status === 204) {
-            return undefined as T;
-        }
-
-        return response.json();
     }
 
     static getAll(accessToken: string | null) {

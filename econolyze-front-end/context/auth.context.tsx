@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
             if (response.authToken) {
                 updateAuthStates(response.authToken, response);
-                router.push("/dashboard");
+                router.replace("/carteira");
             } else {
                 setAccessToken(null);
                 setUser(null);
@@ -161,8 +161,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setAccessToken(null);
         setUser(null);
 
-        window.location.href = "/login";
-    }, []);
+        router.replace("/login");
+    }, [router]);
 
     const doRegister = useCallback(async (payload: RegisterRequest) => {
         return await AuthService.register(payload);

@@ -2,11 +2,10 @@ import type {
     CreateTransactionPayload,
     TransactionResponse,
     Transaction,
+    UpdateTransactionPayload,
 } from "@/lib/types/transaction.types";
 import type { DependenciesResponse } from "@/lib/types/account.types";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ?? "";
-
+import { apiRequest } from "@/lib/services/api-client";
 
 export class TransactionService {
     private static readonly TRANSACTION_PATH = "/transaction";
@@ -19,28 +18,40 @@ export class TransactionService {
         if (!accessToken) {
             throw new Error("Access token is required");
         }
-        const url = `${API_BASE}${this.TRANSACTION_PATH}`;
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
+        return apiRequest<TransactionResponse>(
+            this.TRANSACTION_PATH,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
             },
-            body: JSON.stringify(payload),
-        });
+            "Erro ao registrar transacao"
+        );
+    }
 
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const error: any = new Error(
-                body?.message ?? "Erro ao registrar transação"
-            );
-            error.status = response.status;
-            error.details = body;
-            throw error;
+    static async update(
+        id: number,
+        payload: UpdateTransactionPayload,
+        accessToken: string | null
+    ): Promise<TransactionResponse> {
+        if (!accessToken) {
+            throw new Error("Access token is required");
         }
 
-        return await response.json();
+        return apiRequest<TransactionResponse>(
+            `${this.TRANSACTION_PATH}/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            },
+            "Erro ao atualizar transacao"
+        );
     }
 
     static async getDependencies(
@@ -49,25 +60,12 @@ export class TransactionService {
         if (!accessToken) {
             throw new Error("Access token is required");
         }
-        const url = `${API_BASE}${this.DEPENDENCIES_PATH}`;
 
-        const response = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const error: any = new Error(
-                body?.message ?? "Erro ao carregar dependências"
-            );
-            error.status = response.status;
-            error.details = body;
-            throw error;
-        }
-
-        return await response.json();
+        return apiRequest<DependenciesResponse>(
+            this.DEPENDENCIES_PATH,
+            {},
+            "Erro ao carregar dependencias"
+        );
     }
 
     static async getById(
@@ -78,25 +76,11 @@ export class TransactionService {
             throw new Error("Access token is required");
         }
 
-        const url = `${API_BASE}${this.TRANSACTION_PATH}/${id}`;
-
-        const response = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const error: any = new Error(
-                body?.message ?? "Erro ao buscar transação"
-            );
-            error.status = response.status;
-            error.details = body;
-            throw error;
-        }
-
-        return await response.json();
+        return apiRequest<Transaction>(
+            `${this.TRANSACTION_PATH}/${id}`,
+            {},
+            "Erro ao buscar transacao"
+        );
     }
 
     static async getAll(
@@ -109,29 +93,17 @@ export class TransactionService {
             throw new Error("Access token is required");
         }
 
-        let url = `${API_BASE}${this.TRANSACTION_PATH}?page=${page}&pageSize=${pageSize}`;
+        let url = `${this.TRANSACTION_PATH}?page=${page}&pageSize=${pageSize}`;
 
         if (type) {
             url += `&type=${type}`;
         }
 
-        const response = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const error: any = new Error(
-                body?.message ?? "Erro ao buscar transações"
-            );
-            error.status = response.status;
-            error.details = body;
-            throw error;
-        }
-
-        const data = await response.json();
+        const data = await apiRequest<{ content?: Transaction[] }>(
+            url,
+            {},
+            "Erro ao buscar transacoes"
+        );
 
         return data.content ?? [];
     }
@@ -144,23 +116,12 @@ export class TransactionService {
             throw new Error("Access token is required");
         }
 
-        const url = `${API_BASE}${this.TRANSACTION_PATH}/${id}`;
-
-        const response = await fetch(url, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
+        await apiRequest<void>(
+            `${this.TRANSACTION_PATH}/${id}`,
+            {
+                method: "DELETE",
             },
-        });
-
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const error: any = new Error(
-                body?.message ?? "Erro ao deletar transação"
-            );
-            error.status = response.status;
-            error.details = body;
-            throw error;
-        }
+            "Erro ao deletar transacao"
+        );
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Categorias de transação
+ * Categorias de transacao
  */
 export type TransactionCategory =
     | "FOOD"
@@ -8,20 +8,21 @@ export type TransactionCategory =
     | "HEALTH"
     | "INSURANCE"
     | "UTILITIES"
+    | "LEISURE"
     | "OTHER";
 
 /**
- * Tipos de transação
+ * Tipos de transacao
  */
 export type TransactionType = "INCOME" | "EXPENSE" | "REFUND" | "INVESTMENT";
 
 /**
- * Métodos de pagamento
+ * Metodos de pagamento
  */
 export type PaymentMethod = "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "CASH";
 
 /**
- * Transação do backend
+ * Transacao do backend
  */
 export type Transaction = {
     id: number;
@@ -30,15 +31,14 @@ export type Transaction = {
     type: TransactionType | null;
     description: string | null;
     date?: string;
-    accountId?: number;
-    financialGoalId?: number;
-    method?: PaymentMethod;
+    accountId?: number | null;
+    financialGoalId?: number | null;
+    method?: PaymentMethod | null;
+    isRecurring?: boolean | null;
+    initialPayment?: number | null;
 };
 
-/**
- * Payload para criar transação
- */
-export type CreateTransactionPayload = {
+export type TransactionPayload = {
     amount: number;
     category: TransactionCategory;
     type: TransactionType;
@@ -53,7 +53,17 @@ export type CreateTransactionPayload = {
 };
 
 /**
- * Resposta da API de transações
+ * Payload para criar transacao
+ */
+export type CreateTransactionPayload = TransactionPayload;
+
+/**
+ * Payload para atualizar transacao
+ */
+export type UpdateTransactionPayload = TransactionPayload;
+
+/**
+ * Resposta da API de transacoes
  */
 export type TransactionResponse = {
     id: number;

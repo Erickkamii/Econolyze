@@ -1,38 +1,41 @@
-import { Wallet, CreditCard, TrendingUp, type LucideIcon } from "lucide-react";
+import {
+    Wallet,
+    CreditCard,
+    TrendingUp,
+    PiggyBank,
+    Banknote,
+    type LucideIcon,
+} from "lucide-react";
 import type { AccountType } from "@/lib/types/account.types";
 
-/**
- * Mapa de ícones por tipo de conta
- */
 export const ACCOUNT_ICON_MAP: Record<AccountType, LucideIcon> = {
     CHECKING_ACCOUNT: Wallet,
+    SAVINGS_ACCOUNT: PiggyBank,
     CREDIT_CARD: CreditCard,
     INVESTMENT_ACCOUNT: TrendingUp,
+    MONEY: Banknote,
 };
 
-/**
- * Mapa de cores por tipo de conta
- */
 export const ACCOUNT_COLOR_MAP: Record<AccountType, string> = {
     CHECKING_ACCOUNT: "text-blue-500",
+    SAVINGS_ACCOUNT: "text-cyan-500",
     CREDIT_CARD: "text-purple-500",
     INVESTMENT_ACCOUNT: "text-green-500",
+    MONEY: "text-amber-500",
 };
 
-/**
- * Mapa de labels por tipo de conta
- */
 export const ACCOUNT_LABEL_MAP: Record<AccountType, string> = {
     CHECKING_ACCOUNT: "Conta Corrente",
-    CREDIT_CARD: "Cartão de Crédito",
+    SAVINGS_ACCOUNT: "Poupanca",
+    CREDIT_CARD: "Cartao de Credito",
     INVESTMENT_ACCOUNT: "Investimentos",
+    MONEY: "Dinheiro",
 };
 
-/**
- * Tipos de conta para formulário
- */
 export const ACCOUNT_TYPES = [
     { value: "CHECKING_ACCOUNT", label: "Conta Corrente" },
-    { value: "CREDIT_CARD", label: "Cartão de Crédito" },
+    { value: "SAVINGS_ACCOUNT", label: "Poupanca" },
+    { value: "CREDIT_CARD", label: "Cartao de Credito" },
     { value: "INVESTMENT_ACCOUNT", label: "Investimentos" },
+    { value: "MONEY", label: "Dinheiro" },
 ] as const;

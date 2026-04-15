@@ -126,7 +126,7 @@ export default function HistoricoPage() {
                               <div
                                   className={cn(
                                       "h-10 w-10 rounded-full flex items-center justify-center",
-                                      isIncome ? "bg-success/20" : "bg-muted"
+                                      isIncome ? "bg-success/20" : "bg-destructive/20"
                                   )}
                               >
                                 <Icon
@@ -134,7 +134,7 @@ export default function HistoricoPage() {
                                         "h-5 w-5",
                                         isIncome
                                             ? "text-success"
-                                            : "text-muted-foreground"
+                                            : "text-destructive"
                                     )}
                                 />
                               </div>
@@ -153,7 +153,7 @@ export default function HistoricoPage() {
                               <div
                                   className={cn(
                                       "text-sm font-semibold",
-                                      isIncome ? "text-success" : "text-foreground"
+                                      isIncome ? "text-success" : "text-destructive"
                                   )}
                               >
                                 {isIncome ? "+" : "-"} R${" "}
