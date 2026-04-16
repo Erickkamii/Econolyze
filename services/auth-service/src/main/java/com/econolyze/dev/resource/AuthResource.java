@@ -7,40 +7,81 @@ import com.econolyze.dev.dto.RegisterResponse;
 import com.econolyze.dev.entity.User;
 import com.econolyze.dev.exception.InvalidTokenException;
 import com.econolyze.dev.exception.WrongCredentialsException;
-import com.econolyze.dev.service.UserManager;
+import com.econolyze.dev.service.UserService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestResponse;
 
+@Slf4j
 @Path("/auth")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
 public class AuthResource {
 
     @Inject
-    UserManager userManager;
+    UserService userService;
 
 
     @POST
     @Path("/register")
     @PermitAll
     public RestResponse<RegisterResponse> register(@Valid RegisterRequestDTO dto) {
-        User user = new User();
-        user.setUsername(dto.username);
-        user.setEmail(dto.email);
-        user.setPassword(dto.password);
-
-        UserManager.addUser(user);
-        return RestResponse.ok( new RegisterResponse(
-                "Seja bem vindo ao Econolyze! ",
+        User user = userService.addUser(dto);
+        return RestResponse.ok(new RegisterResponse(
+                "Seja bem vindo ao Econolyze!",
                 user.getUsername()));
+    }
+
+    @POST
+    @Path("/login")
+    @PermitAll
+    public RestResponse<LoginResponseDTO> login(@Valid LoginRequestDTO request) {
+        try {
+            LoginResponseDTO response = userService.login(request.username, request.password);
+            return RestResponse.ok(response);
+        } catch (jakarta.ws.rs.WebApplicationException e) {
+            throw new WrongCredentialsException(e.getMessage());
+        }
+    }
+
+    @POST
+    @Path("/logout")
+    @PermitAll
+    public RestResponse<Void> logout() {
+        try {
+            userService.revokeRefreshToken();
+            return RestResponse.status(RestResponse.Status.NO_CONTENT);
+        } catch (jakarta.ws.rs.WebApplicationException e) {
+            log.warn("Tentativa de logout com token inválido: {}", e.getMessage());
+            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error("Erro interno catastrófico durante o logout", e);
+            return RestResponse.status(RestResponse.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @POST
+    @Path("/refresh")
+    @PermitAll
+    public RestResponse<LoginResponseDTO> refresh() {
+        try {
+            LoginResponseDTO response = userService.refreshTokenFromJWT();
+            return RestResponse.ok(response);
+        } catch (WebApplicationException e) {
+            throw new InvalidTokenException(e.getMessage());
+        }
+    }
+
+    @POST
+    @RolesAllowed("admin")
+    @Path("/admin/login")
+    public Response adminLogin(@Context SecurityContext securityContext){
+        return Response.ok(null).build();
     }
 
     @GET
@@ -52,40 +93,6 @@ public class AuthResource {
             return RestResponse.status(RestResponse.Status.valueOf("HElP"));
         }
     }
-
-    @POST
-    @Path("/login")
-    @PermitAll
-    public RestResponse<LoginResponseDTO> login(LoginRequestDTO request) {
-        try {
-            LoginResponseDTO jwt = UserManager.login(request.username, request.password);
-            return RestResponse.ok(jwt);
-        } catch (IllegalArgumentException e) {
-            throw new WrongCredentialsException(e.getMessage());
-        }
-    }
-
-
-    @POST
-    @RolesAllowed("admin")
-    @Path("/admin/login")
-    public Response adminLogin(@Context SecurityContext securityContext){
-        return Response.ok(null).build();
-    }
-
-    @POST
-    @Path("/refresh")
-    @PermitAll
-    public RestResponse<LoginResponseDTO> refresh(@HeaderParam("Authorization") String token){
-        try {
-            LoginResponseDTO response = userManager.refreshTokenFromJWT();
-            return RestResponse.ok(response);
-            } catch (WebApplicationException e) {
-                throw new InvalidTokenException(e.getMessage());
-            } catch (Exception e) {
-                throw new RuntimeException("Erro interno", e);
-            }
-        }
 }
 
 

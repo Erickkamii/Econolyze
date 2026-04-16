@@ -1,5 +1,6 @@
 package dev.econolyze.client;
 
+import dev.econolyze.dto.request.UpdateTransactionRequest;
 import dev.econolyze.dto.response.PagedResponse;
 import dev.econolyze.dto.request.TransactionRequest;
 import dev.econolyze.dto.response.TransactionResponse;
@@ -23,6 +24,16 @@ public interface TransactionClient {
     Uni<RestResponse<TransactionResponse>> createTransaction(
             @HeaderParam("Authorization") String authorization,
             TransactionRequest transaction
+    );
+
+    @PUT
+    @Path("/transaction/{id}")
+    @Timeout(5000)
+    @Retry(maxRetries = 2)
+    Uni<RestResponse<TransactionResponse>> updateTransaction(
+            @HeaderParam("Authorization") String authorization,
+            @PathParam("id") Long id,
+            UpdateTransactionRequest transaction
     );
 
     @GET

@@ -1,5 +1,6 @@
 package dev.econolyze.domain.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -8,8 +9,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
-@Table(name = "monthly_budget")
+@Table(schema = "finance", name = "monthly_budget")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,6 +20,7 @@ import lombok.Setter;
 public class MonthlyBudget {
     @Id
     private Long id;
-    private Double amount;
+    private BigDecimal amount;
+    @Column(name = "user_id")
     private Long userId;
 }

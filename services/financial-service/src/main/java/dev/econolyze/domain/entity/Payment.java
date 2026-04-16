@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "payments")
+@Table(schema = "finance", name = "payments")
 @Getter
 @Setter
 @Builder
@@ -21,14 +21,16 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "transaction_id", nullable = false)
+    @JoinColumn(name = "transaction_id", foreignKey = @ForeignKey(name = "fk_payments_transaction_id"))
     private Transaction transaction;
     @Column(name = "account_id")
     private Long accountId;
     private BigDecimal amount;
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
     @Column(name = "paid_at")
     private LocalDate paidAt = LocalDate.now();
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status = PaymentStatus.COMPLETED;
     private String description;
 

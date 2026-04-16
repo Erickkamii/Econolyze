@@ -3,6 +3,7 @@ package dev.econolyze.application.services;
 import dev.econolyze.application.dto.PagedResponse;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.application.dto.request.TransactionRequest;
+import dev.econolyze.application.dto.request.TransactionUpdateRequest;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.application.security.UserContext;
@@ -11,6 +12,7 @@ import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.PaymentStatus;
 import dev.econolyze.domain.enums.TransactionType;
+import dev.econolyze.domain.exception.UserValidationException;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -19,6 +21,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -110,6 +113,32 @@ public class TransactionService {
                 .flatMap(s -> accountService.updateAccountBalance(payment)
                         .map(i -> transactionMapper.mapToResponse(s)));
 
+    }
+
+    @WithTransaction
+    public Uni<TransactionResponse> updateTransaction(Long transactionId, TransactionUpdateRequest request){
+        return transactionRepository.findById(transactionId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Transação não encontrada"))
+                .chain(existing -> {
+                    if (!existing.getUserId().equals(userContext.getUserId())) {
+                        return Uni.createFrom().failure(new ForbiddenException("Acesso negado a este recurso"));
+                    }
+                    boolean hasCompletedPayments = existing.getPayments().stream()
+                            .anyMatch(p -> p.getStatus().equals(PaymentStatus.COMPLETED));
+                    if (hasCompletedPayments && request.amount().compareTo(existing.getAmount()) != 0) {
+                        return Uni.createFrom().failure(new UserValidationException(
+                                "Não é permitido alterar o valor de uma transação com pagamentos concluídos"
+                        ));
+                    }
+                    existing.setDescription(request.description());
+                    existing.setCategory(request.category());
+                    if (!hasCompletedPayments) {
+                        existing.setAmount(request.amount());
+                        existing.recalculateStatus();
+                    }
+                    return Uni.createFrom().item(existing);
+                })
+                .map(updated -> transactionMapper.mapToResponse(updated));
     }
 
     @WithSession

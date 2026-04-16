@@ -4,23 +4,11 @@ import lombok.Getter;
 
 @Getter
 public enum AccountType {
-    CHECKING_ACCOUNT(1),
-    SAVINGS_ACCOUNT(2),
-    CREDIT_CARD(3),
-    INVESTMENT_ACCOUNT(4),
-    MONEY(5);
-    private final int code;
+    CHECKING_ACCOUNT,
+    SAVINGS_ACCOUNT,
+    CREDIT_CARD,
+    INVESTMENT_ACCOUNT,
+    MONEY
 
-    AccountType(int code) {
-        this.code = code;
-    }
 
-    public static AccountType fromCode(int code) {
-        for (AccountType type : AccountType.values()) {
-            if (type.getCode() == code) {
-                return type;
-                }
-        }
-        throw new IllegalArgumentException("Invalid code: " + code);
-    }
 }

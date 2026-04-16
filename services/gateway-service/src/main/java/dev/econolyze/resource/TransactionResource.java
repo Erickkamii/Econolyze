@@ -3,6 +3,7 @@ package dev.econolyze.resource;
 import dev.econolyze.aggregator.TransactionDependenciesAggregator;
 import dev.econolyze.client.TransactionClient;
 import dev.econolyze.dto.flter.TransactionFilter;
+import dev.econolyze.dto.request.UpdateTransactionRequest;
 import dev.econolyze.dto.response.PagedResponse;
 import dev.econolyze.dto.request.TransactionRequest;
 import dev.econolyze.dto.response.TransactionDependenciesResponse;
@@ -54,6 +55,15 @@ public class TransactionResource {
         if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
         return transactionClient.createTransaction(headers.getHeaderString("Authorization"), request)
                 .onFailure().invoke(e -> LOG.errorf("Erro ao criar transação: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
+    }
+
+    @PUT
+    @Path("/transaction/{id}")
+    public Uni<RestResponse<TransactionResponse>> updateTransaction(@Context HttpHeaders headers, @PathParam("id") Long id, UpdateTransactionRequest request) {
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return transactionClient.updateTransaction(headers.getHeaderString("Authorization"), id, request)
+                .onFailure().invoke(e -> LOG.errorf("Erro ao atualizar transação: %s", e.getMessage()))
                 .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 

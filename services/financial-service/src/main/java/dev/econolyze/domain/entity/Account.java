@@ -10,7 +10,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "accounts")
+@Table(schema = "finance", name = "accounts")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -22,6 +22,7 @@ public class Account {
     @Column(name = "user_id")
     private Long userId;
     private String name;
+    @Enumerated(EnumType.STRING)
     private AccountType type;
     @Column(name = "actual_balance")
     private BigDecimal actualBalance;

@@ -1,14 +1,10 @@
 package com.econolyze.dev.entity;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
 import io.quarkus.security.jpa.UserDefinition;
 import io.quarkus.security.jpa.Username;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,21 +12,26 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(schema = "auth", name = "users")
 @UserDefinition
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class User extends PanacheEntity {
-    @Column(unique = true)
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     @Username
+    @Column(unique = true, nullable = false)
     private String username;
     @Email
+    @Column(unique = true, nullable = false)
     private String email;
     @Password
+    @Column(nullable = false)
     private String password;
     @Roles
+    @Column(nullable = false)
     private String roles;
 }

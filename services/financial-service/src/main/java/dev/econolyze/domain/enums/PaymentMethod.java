@@ -4,13 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum PaymentMethod {
-    CREDIT_CARD_FULL(1, true),
+    CREDIT_CARD(1, true),
     CASH(2, true),
     BANK_TRANSFER(3, false),
     PAYPAL(4, true),
     PIX(5, true),
-    DEBIT_CARD(6, true),
-    CREDIT_CARD_INSTALLMENTS(7, true);
+    DEBIT_CARD(6, true);
 
     public final int code;
     public final boolean instantDebit;

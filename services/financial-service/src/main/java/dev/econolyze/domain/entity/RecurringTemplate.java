@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "recurrency_template")
+@Table(schema = "finance", name = "recurrency_template")
 @Getter
 @Setter
 @Builder
@@ -25,8 +25,11 @@ public class RecurringTemplate {
     @Column(name = "user_id")
     private Long userId;
     private BigDecimal amount;
+    @Enumerated(EnumType.STRING)
     private TransactionType type;
+    @Enumerated(EnumType.STRING)
     private Category category;
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
     private String description;
     @Enumerated(EnumType.STRING)

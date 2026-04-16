@@ -3,21 +3,14 @@ package com.econolyze.dev.dto;
 import com.econolyze.dev.util.StrongPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
-@Data
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class RegisterRequestDTO {
+public record RegisterRequestDTO (
     @NotBlank(message = "Informe o nome de usuário")
-    public String username;
+    String username,
     @Email
     @NotBlank(message="Informe o email")
-    public String email;
+    String email,
     @StrongPassword
-
-    public String password;
-    public String roles;
-}
+    String password,
+    String roles
+){}

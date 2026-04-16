@@ -4,29 +4,19 @@ import lombok.Getter;
 
 @Getter
 public enum TransactionType {
-    INCOME(1, true, false),
-    EXPENSE(2, false, true),
-    TRANSFER(3, false, false),
-    SAVINGS(4, false, false),
-    REFUND(5, true, false),
-    INVESTMENT(6, true, false);
+    INCOME( true, false),
+    EXPENSE( false, true),
+    TRANSFER( false, false),
+    SAVINGS( false, false),
+    REFUND( true, false),
+    INVESTMENT( true, false);
 
-    private final int code;
     private final boolean increaseBalance;
     private final boolean decreaseBalance;
 
-    TransactionType(int code, boolean increaseBalance, boolean decreaseBalance) {
-        this.code = code;
+    TransactionType( boolean increaseBalance, boolean decreaseBalance) {
         this.increaseBalance = increaseBalance;
         this.decreaseBalance = decreaseBalance;
     }
 
-    public static TransactionType fromCode(int code) {
-        for (TransactionType t : TransactionType.values()) {
-            if (t.getCode() == code) {
-                return t;
-            }
-        }
-        throw new IllegalArgumentException("Invalid code: " + code);
-    }
 }

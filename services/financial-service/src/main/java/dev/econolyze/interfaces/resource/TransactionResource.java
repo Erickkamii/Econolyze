@@ -2,6 +2,7 @@ package dev.econolyze.interfaces.resource;
 
 import dev.econolyze.application.dto.PagedResponse;
 import dev.econolyze.application.dto.request.TransactionRequest;
+import dev.econolyze.application.dto.request.TransactionUpdateRequest;
 import dev.econolyze.application.dto.response.TransactionResponse;
 import dev.econolyze.application.services.TransactionService;
 import io.smallrye.mutiny.Uni;
@@ -18,6 +19,14 @@ public class TransactionResource {
     @POST
     public Uni<RestResponse<TransactionResponse>> addTransaction(TransactionRequest request) {
         return transactionService.saveTransaction(request)
+                .map(RestResponse::ok)
+                .onFailure().recoverWithItem(RestResponse.serverError());
+    }
+
+    @PUT
+    @Path("/{id}")
+    public Uni<RestResponse<TransactionResponse>> updateTransaction(@PathParam("id") Long id, TransactionUpdateRequest request) {
+        return transactionService.updateTransaction(id, request)
                 .map(RestResponse::ok)
                 .onFailure().recoverWithItem(RestResponse.serverError());
     }

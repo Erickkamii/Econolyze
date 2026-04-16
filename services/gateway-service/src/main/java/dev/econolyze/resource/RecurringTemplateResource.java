@@ -11,6 +11,7 @@ import dev.econolyze.exception.ServiceUnavailableException;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -26,7 +27,7 @@ import java.util.List;
 @Authenticated
 public class RecurringTemplateResource {
 
-    private static final Logger LOG = Logger.getLogger(TransactionResource.class);
+    private static final Logger LOG = Logger.getLogger(RecurringTemplateResource.class);
 
     @Inject
     @RestClient
@@ -41,7 +42,7 @@ public class RecurringTemplateResource {
     @POST
     @Path("/recurring")
     public Uni<RestResponse<RecurringTemplateResponse>> createRecurring(@Context HttpHeaders headers,
-                                                                        RecurringTemplateRequest request)
+                                                                        @Valid RecurringTemplateRequest request)
     {
         if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
         return recurrencyClient.createRecurringTemplate(headers.getHeaderString("Authorization"), request)

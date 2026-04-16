@@ -11,7 +11,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "financial_goal")
+@Table(schema = "finance", name = "financial_goal")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -25,21 +25,11 @@ public class FinancialGoal {
     private String name;
     private BigDecimal amount;
     private String description;
-    private Integer typeCode;
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private Integer statusCode;
+    private GoalStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private GoalType type;
 
-    @Transient
-    public GoalType getType(){
-        return typeCode != null ? GoalType.fromCode(typeCode): null;
-    }
-    public void setType(GoalType type){
-        this.typeCode = type.getCode();
-    }
-    @Transient
-    public GoalStatus getStatus(){ return statusCode != null ? GoalStatus.fromCode(statusCode): null;
-    }
-    public void setStatus(GoalStatus status){
-        this.statusCode = status.getCode();
-    }
 }

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "transactions")
+@Table(schema = "finance", name = "transactions")
 @Builder
 @Getter
 @Setter
@@ -22,21 +22,26 @@ public class Transaction {
     private Long id;
     @Column(name = "amount")
     private BigDecimal amount;
+    @Column(name = "user_id")
     private Long userId;
-    @Column(name = "financialGoalId")
+    @Column(name = "financial_goal_id")
     private Long financialGoalId;
     @Column(name = "account_id")
     private Long accountId;
+    @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private Category category;
+    @Enumerated(EnumType.STRING)
     @Column(name = "type")
     private TransactionType type;
-    @Column(name = "method_code")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "method")
     private PaymentMethod method;
     @Column(name = "recurring_template_id")
     private Long recurringTemplateId;
     @Column(name = "is_recurring")
     private Boolean isRecurring;
+    @Enumerated(EnumType.STRING)
     private TransactionStatus status = TransactionStatus.PENDING;
     private String description;
     private LocalDate date;
