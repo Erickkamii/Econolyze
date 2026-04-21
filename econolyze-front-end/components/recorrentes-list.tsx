@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/context/auth.context"
 import { RecurringService } from "@/lib/services/recurring.service"
 import type { RecurringTemplate } from "@/lib/types/recurring.types"
+import { isIncomeTransaction } from "@/lib/utils/transaction-mappers" // <-- Import adicionado
 
 const frequencyLabels: Record<string, string> = {
   DAILY: "Diário",
@@ -88,85 +89,95 @@ export function RecorrentesList() {
 
   return (
       <div className="space-y-3">
-        {items.map((item) => (
-            <Card key={item.id} className={item.isActive ? "" : "opacity-60"}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <Link
-                      href={`/recorrentes/${item.id}`}
-                      className="flex-1 flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <Repeat className="h-6 w-6 text-primary" />
-                    </div>
+        {items.map((item) => {
+          // Identifica se é receita ou despesa para definir as cores
+          const isIncome = isIncomeTransaction(item.type)
+          const colorText = isIncome ? "text-green-500" : "text-red-500"
+          const colorBg = isIncome ? "bg-green-500/20" : "bg-red-500/20"
 
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.description}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <span>{frequencyLabels[item.frequency] ?? item.frequency}</span>
-                        <span>•</span>
-                        <span>
-                                            R${" "}
-                          {item.amount.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
-                                        </span>
-                        {item.nextOccurrence && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                                    Próximo:{" "}
-                                {new Date(item.nextOccurrence).toLocaleDateString("pt-BR")}
-                                                </span>
-                            </>
-                        )}
-                        {item.endDate && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                                    Até:{" "}
-                                {new Date(item.endDate).toLocaleDateString("pt-BR")}
-                                                </span>
-                            </>
-                        )}
+          return (
+              <Card key={item.id} className={item.isActive ? "" : "opacity-60"}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Link
+                        href={`/recorrentes/${item.id}`}
+                        className="flex-1 flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      {/* Ícone dinâmico com a cor de Receita/Despesa */}
+                      <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${colorBg}`}>
+                        <Repeat className={`h-6 w-6 ${colorText}`} />
                       </div>
-                    </div>
-                  </Link>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs text-muted-foreground hidden sm:block">
-                                    {item.isActive ? "Ativa" : "Inativa"}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{item.description}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <span>{frequencyLabels[item.frequency] ?? item.frequency}</span>
+                          <span>•</span>
+                          {/* Valor formatado com cor e sinal numérico */}
+                          <span className={`font-medium ${colorText}`}>
+                            {isIncome ? "+" : "-"} R${" "}
+                            {item.amount.toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </span>
+                          
+                          {item.nextOccurrence && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  Próximo:{" "}
+                                  {new Date(item.nextOccurrence).toLocaleDateString("pt-BR")}
                                 </span>
-                    <Switch
-                        checked={item.isActive}
-                        disabled={togglingId === item.id}
-                        onCheckedChange={() => handleToggle(item.id)}
-                    />
-                  </div>
+                              </>
+                          )}
+                          {item.endDate && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  Até:{" "}
+                                  {new Date(item.endDate).toLocaleDateString("pt-BR")}
+                                </span>
+                              </>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/recorrentes/${item.id}/editar`}>Editar</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                          className="text-destructive"
-                          disabled={deletingId === item.id}
-                          onClick={() => handleDelete(item.id)}
-                      >
-                        {deletingId === item.id ? "Excluindo..." : "Excluir"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
-        ))}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-muted-foreground hidden sm:block">
+                        {item.isActive ? "Ativa" : "Inativa"}
+                      </span>
+                      <Switch
+                          checked={item.isActive}
+                          disabled={togglingId === item.id}
+                          onCheckedChange={() => handleToggle(item.id)}
+                      />
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/recorrentes/${item.id}/editar`}>Editar</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            className="text-destructive"
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete(item.id)}
+                        >
+                          {deletingId === item.id ? "Excluindo..." : "Excluir"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+          )
+        })}
       </div>
   )
 }
