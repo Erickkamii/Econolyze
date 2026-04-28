@@ -22,6 +22,20 @@ export type TransactionType = "INCOME" | "EXPENSE" | "REFUND" | "INVESTMENT";
 export type PaymentMethod = "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "CASH";
 
 /**
+ * Status de pagamento da transacao
+ */
+export type TransactionStatus = "PAID" | "PAID_PARTIALLY" | "PENDING" | "CANCELLED";
+
+export type PaymentResponse = {
+    transactionId: number;
+    amount: number | string | null;
+    method: string | null;
+    status: string | null;
+    paidAt: string | null;
+    description: string | null;
+};
+
+/**
  * Transacao do backend
  */
 export type Transaction = {
@@ -36,6 +50,11 @@ export type Transaction = {
     method?: PaymentMethod | null;
     isRecurring?: boolean | null;
     initialPayment?: number | null;
+    paidAmount?: number | string | null;
+    remainingBalance?: number | string | null;
+    status?: TransactionStatus | null;
+    payments?: PaymentResponse[] | null;
+    recurringTemplateId?: number | null;
 };
 
 export type TransactionPayload = {
@@ -72,4 +91,14 @@ export type TransactionResponse = {
     type: TransactionType;
     description: string;
     date: string;
+    method?: string | null;
+    financialGoalId?: number | null;
+    isRecurring?: boolean | null;
+    initialPayment?: number | null;
+    paidAmount?: number | string | null;
+    remainingBalance?: number | string | null;
+    status?: TransactionStatus | null;
+    accountId?: number | null;
+    payments?: PaymentResponse[] | null;
+    recurringTemplateId?: number | null;
 };

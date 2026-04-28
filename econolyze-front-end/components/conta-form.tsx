@@ -5,17 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/currency-input";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CurrencyFormField, SelectFormField, TextFormField } from "@/components/form-fields";
 
 import { useAuth } from "@/context/auth.context";
 import { AccountService } from "@/lib/services/account.service";
@@ -65,70 +56,40 @@ export function ContaForm() {
   return (
       <Card className="w-full">
         <CardContent className="pt-6 w-full">
-          <form onSubmit={handleSubmit} className="space-y-6 w-full">
-            {/* Nome */}
-            <div className="space-y-2 w-full">
-              <Label>Nome da Conta</Label>
-              <Input
-                  type="text"
-                  placeholder="Ex: Nubank, Banco Inter..."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-secondary w-full"
-                  required
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="form-shell">
+            <TextFormField
+                label="Nome da Conta"
+                type="text"
+                placeholder="Ex: Nubank, Banco Inter..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+            />
 
-            {/* Tipo */}
-            <div className="space-y-2 w-full">
-              <Label>Tipo de Conta</Label>
-              <Select
-                  value={type}
-                  onValueChange={(value) => setType(value as AccountType)}
-              >
-                <SelectTrigger className="bg-secondary w-full">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACCOUNT_TYPES.map((accountType) => (
-                      <SelectItem
-                          key={accountType.value}
-                          value={accountType.value}
-                      >
-                        {accountType.label}
-                      </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectFormField
+                label="Tipo de Conta"
+                value={type}
+                onValueChange={(value) => setType(value as AccountType)}
+                placeholder="Selecione o tipo"
+                options={ACCOUNT_TYPES}
+            />
 
-            {/* Saldo Atual */}
-            <div className="space-y-2 w-full">
-              <Label>
-                {isCreditCard ? "Fatura Atual" : "Saldo Atual"}
-              </Label>
-              <CurrencyInput
-                  value={actualBalance}
-                  onChange={setActualBalance}
-                  required
-                  className="w-full"
-              />
-            </div>
+            <CurrencyFormField
+                label={isCreditCard ? "Fatura Atual" : "Saldo Atual"}
+                value={actualBalance}
+                onChange={setActualBalance}
+                required
+            />
 
-            {/* Limite de Crédito (só para cartão) */}
             {isCreditCard && (
-                <div className="space-y-2 w-full">
-                  <Label>Limite de Crédito</Label>
-                  <CurrencyInput
-                      value={creditLimit}
-                      onChange={setCreditLimit}
-                      required
-                      className="w-full"
-                  />
-                </div>
+                <CurrencyFormField
+                    label="Limite de Crédito"
+                    value={creditLimit}
+                    onChange={setCreditLimit}
+                    required
+                />
             )}
 
-            {/* Botão */}
             <Button type="submit" className="w-full" size="lg">
               Criar Conta
             </Button>

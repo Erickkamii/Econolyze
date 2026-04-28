@@ -1,14 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { CurrencyInput } from "@/components/currency-input"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { CurrencyFormField, SelectFormField, TextFormField } from "@/components/form-fields"
+import { useAuth } from "@/context/auth.context"
+import { AccountService } from "@/lib/services/account.service"
+import { PaymentService } from "@/lib/services/payment.service"
+import type { Account } from "@/lib/types/account.types"
 
 interface PagamentoFormProps {
   transacaoId: number
@@ -16,21 +20,71 @@ interface PagamentoFormProps {
 }
 
 export function PagamentoForm({ transacaoId, valorRestante }: PagamentoFormProps) {
+  const router = useRouter()
+  const { accessToken } = useAuth()
   const [conta, setConta] = useState("")
   const [tipoPagamento, setTipoPagamento] = useState<"total" | "parcial">("total")
   const [valorParcial, setValorParcial] = useState("")
   const [data, setData] = useState("")
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [loadingAccounts, setLoadingAccounts] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!accessToken) return
+
+    async function loadAccounts() {
+      setLoadingAccounts(true)
+
+      try {
+        const data = await AccountService.getAll(accessToken)
+        setAccounts(data)
+      } catch (error: any) {
+        toast.error(error.message ?? "Erro ao carregar contas")
+      } finally {
+        setLoadingAccounts(false)
+      }
+    }
+
+    loadAccounts()
+  }, [accessToken])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!accessToken) return toast.error("Você precisa estar autenticado.")
+    if (!conta) return toast.error("Selecione a conta para pagamento.")
+    if (!data) return toast.error("Informe a data do pagamento.")
+
     const valorPagamento = tipoPagamento === "total" ? valorRestante : (Number.parseInt(valorParcial) || 0) / 100
-    console.log({ transacaoId, conta, tipoPagamento, valorPagamento, data })
+    if (valorPagamento <= 0) return toast.error("Informe um valor de pagamento válido.")
+
+    const selectedAccount = accounts.find((account) => String(account.id) === conta)
+
+    try {
+      setSubmitting(true)
+      await PaymentService.create({
+        transactionId: transacaoId,
+        amount: valorPagamento,
+        method: selectedAccount?.type === "MONEY" ? "CASH" : "PIX",
+        paidAt: data,
+        status: "COMPLETED",
+        accountId: Number(conta),
+      }, accessToken)
+
+      toast.success("Pagamento registrado!")
+      router.refresh()
+      router.replace("/pagamentos")
+    } catch (error: any) {
+      toast.error(error.message ?? "Erro ao registrar pagamento")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="form-shell">
           <div className="space-y-3">
             <Label>Tipo de Pagamento</Label>
             <RadioGroup value={tipoPagamento} onValueChange={(value) => setTipoPagamento(value as "total" | "parcial")}>
@@ -55,50 +109,44 @@ export function PagamentoForm({ transacaoId, valorRestante }: PagamentoFormProps
           </div>
 
           {tipoPagamento === "parcial" && (
-            <div className="space-y-2">
-              <Label htmlFor="valorParcial">Valor a Pagar</Label>
-              <CurrencyInput
+            <CurrencyFormField
                 id="valorParcial"
+                label="Valor a Pagar"
                 value={valorParcial}
                 onChange={setValorParcial}
                 max={valorRestante}
                 required
-              />
-              <p className="text-xs text-muted-foreground">
-                Valor máximo: R$ {valorRestante.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+                hint={`Valor máximo: R$ ${valorRestante.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+            />
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="conta">Conta para Pagamento</Label>
-            <Select value={conta} onValueChange={setConta}>
-              <SelectTrigger className="bg-secondary">
-                <SelectValue placeholder="Selecione a conta" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nubank">Nubank - R$ 3.250,50</SelectItem>
-                <SelectItem value="inter">Inter - R$ 1.890,00</SelectItem>
-                <SelectItem value="carteira">Carteira Física - R$ 250,00</SelectItem>
-                <SelectItem value="poupanca">Poupança BB - R$ 10.456,82</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectFormField
+            label="Conta para Pagamento"
+            value={conta}
+            onValueChange={setConta}
+            placeholder={loadingAccounts ? "Carregando contas..." : "Selecione a conta"}
+            disabled={loadingAccounts}
+            options={
+              accounts.length
+                ? accounts.map((account) => ({
+                  value: String(account.id),
+                  label: `${account.name} - R$ ${account.actualBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+                }))
+                : [{ value: "no-accounts", label: "Nenhuma conta disponível", disabled: true }]
+            }
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="data">Data do Pagamento</Label>
-            <Input
+          <TextFormField
               id="data"
+              label="Data do Pagamento"
               type="date"
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="bg-secondary"
               required
-            />
-          </div>
+          />
 
-          <Button type="submit" className="w-full" size="lg">
-            Confirmar Pagamento
+          <Button type="submit" className="w-full" size="lg" disabled={loadingAccounts || submitting}>
+            {submitting ? "Registrando..." : "Confirmar Pagamento"}
           </Button>
         </form>
       </CardContent>

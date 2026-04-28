@@ -5,17 +5,8 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { CurrencyInput } from "@/components/currency-input"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { CurrencyFormField, FormGrid, SelectFormField, TextFormField } from "@/components/form-fields"
 
 import { useAuth } from "@/context/auth.context"
 import { RecurringService } from "@/lib/services/recurring.service"
@@ -133,7 +124,7 @@ export function RecorrenciaForm({ isEdit = false, templateId }: Props) {
   return (
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="form-shell">
 
             {/* Tipo — só na criação */}
             {!isEdit && (
@@ -157,108 +148,77 @@ export function RecorrenciaForm({ isEdit = false, templateId }: Props) {
                 </div>
             )}
 
-            {/* Descrição */}
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Input
+            <TextFormField
+                  label="Descrição"
                   placeholder="Ex: Aluguel, Netflix, Salário..."
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
-                  className="bg-secondary"
+                  required
+            />
+
+            <CurrencyFormField label="Valor" value={valor} onChange={setValor} required />
+
+            <FormGrid columns={isEdit ? 2 : 3}>
+              <SelectFormField
+                  label="Categoria"
+                  value={categoria}
+                  onValueChange={setCategoria}
+                  placeholder="Selecione uma categoria"
+                  options={CATEGORIES}
                   required
               />
-            </div>
 
-            {/* Valor */}
-            <div className="space-y-2">
-              <Label>Valor</Label>
-              <CurrencyInput value={valor} onChange={setValor} required className="w-full" />
-            </div>
+              <SelectFormField
+                  label="Método de Pagamento"
+                  value={metodo}
+                  onValueChange={setMetodo}
+                  placeholder="Selecione o método"
+                  options={PAYMENT_METHODS}
+                  required
+              />
 
-            {/* Categoria */}
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select value={categoria} onValueChange={setCategoria} required>
-                <SelectTrigger className="bg-secondary">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {!isEdit && (
+                  <SelectFormField
+                      label="Frequência"
+                      value={frequencia}
+                      onValueChange={setFrequencia}
+                      placeholder="Selecione a frequência"
+                      options={[
+                        { value: "DAILY", label: "Diário" },
+                        { value: "WEEKLY", label: "Semanal" },
+                        { value: "MONTHLY", label: "Mensal" },
+                        { value: "YEARLY", label: "Anual" },
+                      ]}
+                      required
+                  />
+              )}
+            </FormGrid>
 
-            {/* Método */}
-            <div className="space-y-2">
-              <Label>Método de Pagamento</Label>
-              <Select value={metodo} onValueChange={setMetodo} required>
-                <SelectTrigger className="bg-secondary">
-                  <SelectValue placeholder="Selecione o método" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_METHODS.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Frequência e Data Início — só na criação */}
             {!isEdit && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Frequência</Label>
-                    <Select value={frequencia} onValueChange={setFrequencia} required>
-                      <SelectTrigger className="bg-secondary">
-                        <SelectValue placeholder="Selecione a frequência" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DAILY">Diário</SelectItem>
-                        <SelectItem value="WEEKLY">Semanal</SelectItem>
-                        <SelectItem value="MONTHLY">Mensal</SelectItem>
-                        <SelectItem value="YEARLY">Anual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Data de Início</Label>
-                    <Input
+                  <TextFormField
+                        label="Data de Início"
                         type="date"
                         value={dataInicio}
                         onChange={(e) => setDataInicio(e.target.value)}
-                        className="bg-secondary"
                         required
-                    />
-                  </div>
-                </>
+                  />
             )}
 
-            {/* Data de Fim */}
-            <div className="space-y-2">
-              <Label>Data de Fim <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-              <Input
+            <TextFormField
+                  label={<>Data de Fim <span className="text-muted-foreground text-xs">(opcional)</span></>}
                   type="date"
                   value={dataFim}
                   onChange={(e) => setDataFim(e.target.value)}
-                  className="bg-secondary"
-              />
-            </div>
+            />
 
-            {/* Máximo de Ocorrências */}
-            <div className="space-y-2">
-              <Label>Máximo de Ocorrências <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-              <Input
+            <TextFormField
+                  label={<>Máximo de Ocorrências <span className="text-muted-foreground text-xs">(opcional)</span></>}
                   type="number"
                   min="1"
                   placeholder="Ex: 12"
                   value={maxOcorrencias}
                   onChange={(e) => setMaxOcorrencias(e.target.value)}
-                  className="bg-secondary"
-              />
-            </div>
+            />
 
             <Button type="submit" className="w-full" size="lg" disabled={submitting}>
               {submitting

@@ -4,6 +4,7 @@ import { useAuth } from "@/context/auth.context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PrivateHeader } from "@/components/private-header";
 
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading } = useAuth();
@@ -31,5 +32,10 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
         );
     }
 
-    return <>{children}</>;
+    return (
+        <>
+            <PrivateHeader />
+            {children}
+        </>
+    );
 }

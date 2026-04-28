@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart3, TrendingUp, Repeat, History } from "lucide-react"
+import { Home, BarChart3, TrendingUp, Repeat, History, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function MainNav() {
@@ -12,6 +12,7 @@ export function MainNav() {
     { href: "/carteira", label: "Home", icon: Home },
     { href: "/historico", label: "Histórico", icon: History },
     { href: "/recorrentes", label: "Recorrentes", icon: Repeat },
+    { href: "/metas", label: "Metas", icon: Target },
     { href: "/analises", label: "Análises", icon: BarChart3 },
     { href: "/investimentos", label: "Investimentos", icon: TrendingUp },
   ]
@@ -33,8 +34,10 @@ export function MainNav() {
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-all duration-200",
-                  isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
+                  "flex flex-col items-center gap-1 rounded-lg px-3 py-2 transition-all duration-200",
+                  isActive || pathname.startsWith(`${item.href}/`)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
                 )}
               >
                 <Icon className="h-5 w-5" />

@@ -51,12 +51,12 @@ export type UpdateAccountPayload = {
 /**
  * Status da meta
  */
-export type GoalStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type GoalStatus = "ACTIVE" | "COMPLETED" | "CANCELLED" | "PAUSED" | "OVERDUE" | "DRAFT";
 
 /**
  * Tipo de meta
  */
-export type GoalType = "SAVINGS" | "INVESTMENT" | "DEBT_PAYMENT" | "OTHER";
+export type GoalType = "VACATION" | "TRAVEL" | "INVESTMENT" | "SAVING" | "OTHER";
 
 /**
  * Meta financeira
@@ -68,6 +68,20 @@ export type Goal = {
     description: string;
     type: GoalType;
     status: GoalStatus;
+};
+
+export type CreateGoalPayload = {
+    name: string;
+    amount: number;
+    description: string;
+    type: GoalType;
+    status: GoalStatus;
+};
+
+export type GoalProgress = {
+    id: number;
+    name: string;
+    progress: number;
 };
 
 /**

@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth.context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { TextFormField } from "@/components/form-fields";
 import type { RegisterRequest } from "@/lib/types";
 import {toast} from "sonner";
 
@@ -56,59 +55,47 @@ export function RegistroForm() {
     return (
         <Card className="border-border/50">
             <CardContent className="pt-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="form-shell">
 
-                    <div className="space-y-2">
-                        <Label htmlFor="username">Nome de Usuário</Label>
-                        <Input
-                            id="username"
-                            type="text"
-                            value={form.username}
-                            placeholder="seuuser"
-                            onChange={(e) => setForm({ ...form, username: e.target.value })}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="username"
+                        label="Nome de Usuário"
+                        type="text"
+                        value={form.username}
+                        placeholder="seuuser"
+                        onChange={(e) => setForm({ ...form, username: e.target.value })}
+                        required
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email">E-mail</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={form.email}
-                            placeholder="seu@email.com"
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="email"
+                        label="E-mail"
+                        type="email"
+                        value={form.email}
+                        placeholder="seu@email.com"
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        required
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Senha</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            value={form.password}
-                            placeholder="••••••••"
-                            onChange={(e) => setForm({ ...form, password: e.target.value })}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="password"
+                        label="Senha"
+                        type="password"
+                        value={form.password}
+                        placeholder="••••••••"
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        required
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm">Confirmar Senha</Label>
-                        <Input
-                            id="confirm"
-                            type="password"
-                            value={confirmPassword}
-                            placeholder="••••••••"
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="confirm"
+                        label="Confirmar Senha"
+                        type="password"
+                        value={confirmPassword}
+                        placeholder="••••••••"
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                    />
 
                     {error && (
                         <p className="text-sm text-destructive" role="alert" aria-live="polite">

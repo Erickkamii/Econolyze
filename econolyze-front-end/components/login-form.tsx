@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth.context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { TextFormField } from "@/components/form-fields";
 import {toast} from "sonner";
 
 export function LoginForm() {
@@ -40,33 +39,27 @@ export function LoginForm() {
     return (
         <Card className="border-border/50">
             <CardContent className="pt-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="form-shell">
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email">E-mail ou Usuário</Label>
-                        <Input
-                            id="email"
-                            type="text"
-                            placeholder="seu@email.com"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="email"
+                        label="E-mail ou Usuário"
+                        type="text"
+                        placeholder="seu@email.com"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Senha</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="bg-secondary border-border"
-                        />
-                    </div>
+                    <TextFormField
+                        id="password"
+                        label="Senha"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
 
                     {error && (
                         <p className="text-sm text-destructive" role="alert" aria-live="polite">{error}</p>

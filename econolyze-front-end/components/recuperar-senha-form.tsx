@@ -5,8 +5,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { FormField } from "@/components/form-fields"
 import { Mail } from "lucide-react"
 
 export function RecuperarSenhaForm() {
@@ -30,9 +30,12 @@ export function RecuperarSenhaForm() {
   return (
     <Card className="border-border/50">
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+        <form onSubmit={handleSubmit} className="form-shell">
+          <FormField
+            label="E-mail"
+            htmlFor="email"
+            hint="Enviaremos um link para redefinição de senha para este e-mail"
+          >
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -42,13 +45,10 @@ export function RecuperarSenhaForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-secondary border-border pl-10"
+                className="form-control pl-10"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Enviaremos um link para redefinição de senha para este e-mail
-            </p>
-          </div>
+          </FormField>
 
           <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
             {isLoading ? "Enviando..." : "Enviar Link de Recuperação"}

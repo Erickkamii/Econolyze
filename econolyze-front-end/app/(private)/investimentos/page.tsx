@@ -3,12 +3,23 @@ import { InvestimentoChart } from "@/components/investimento-chart"
 import { InvestimentoMetrics } from "@/components/investimento-metrics"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import Link from "next/link"
 
 export default function InvestimentosPage() {
   return (
     <div className="min-h-screen pb-20">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Investimentos - CDB vs CDI</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Investimentos - CDB vs CDI</h1>
+          <Button asChild>
+            <Link href="/metas/nova">
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Meta
+            </Link>
+          </Button>
+        </div>
 
         <InvestimentoMetrics />
 

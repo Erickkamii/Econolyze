@@ -91,6 +91,15 @@ export default function TransacaoDetalhesPage({ params }: PageProps) {
   const amount = typeof transaction.amount === "number"
     ? transaction.amount
     : Number(transaction.amount ?? 0);
+  const paidAmount = Number(transaction.paidAmount ?? transaction.initialPayment ?? 0);
+  const remainingBalance = Number(transaction.remainingBalance ?? Math.max(amount - paidAmount, 0));
+  const paymentProgress = amount > 0 ? Math.min(100, (paidAmount / amount) * 100) : 0;
+  const payments = transaction.payments ?? [];
+
+  const formatDate = (value: string | null | undefined) => {
+    if (!value) return "-";
+    return new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR");
+  };
 
   return (
     <div className="relative mx-auto min-h-screen max-w-2xl p-6 pb-32">
@@ -140,6 +149,62 @@ export default function TransacaoDetalhesPage({ params }: PageProps) {
             <span className="text-muted-foreground">Conta</span>
             <span>{transaction.accountId ? `#${transaction.accountId}` : "Nao informada"}</span>
           </div>
+
+          {(transaction.status === "PAID_PARTIALLY" || payments.length > 0) && (
+            <div className="space-y-4 border-t border-border pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-md border border-primary/20 bg-primary/5 p-3 dark:bg-primary/[0.08]">
+                  <p className="text-xs text-muted-foreground">Já pago</p>
+                  <p className="text-lg font-semibold text-primary">R$ {formatCurrency(paidAmount)}</p>
+                </div>
+                <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 dark:bg-destructive/[0.08]">
+                  <p className="text-xs text-muted-foreground">Falta pagar</p>
+                  <p className="text-lg font-semibold text-destructive">R$ {formatCurrency(remainingBalance)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Progresso do pagamento</span>
+                  <span className="font-medium">{paymentProgress.toFixed(0)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${paymentProgress}%` }} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {payments.length > 0 && (
+            <div className="space-y-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Pagamentos</span>
+                <span className="text-sm text-muted-foreground">
+                  {payments.length} pagamento{payments.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {payments.map((payment, index) => (
+                  <div
+                    key={`${payment.paidAt ?? "sem-data"}-${payment.amount ?? 0}-${index}`}
+                    className="flex items-center justify-between rounded-md border border-border/70 bg-secondary/40 p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{payment.description ?? `Pagamento ${index + 1}`}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(payment.paidAt)} · {payment.method ?? "Método não informado"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">R$ {formatCurrency(Number(payment.amount ?? 0))}</p>
+                      {payment.status && <p className="text-xs text-muted-foreground">{payment.status}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {transaction.description && (
             <div className="border-t border-border pt-4">

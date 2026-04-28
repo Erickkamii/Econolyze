@@ -5,18 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/currency-input";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { CurrencyFormField, FormGrid, SelectFormField, TextFormField } from "@/components/form-fields";
 
 import { useAuth } from "@/context/auth.context";
 import { TransactionService } from "@/lib/services/transaction.service";
@@ -131,6 +123,19 @@ export function TransacaoForm({
         setMeta(transaction.financialGoalId ? String(transaction.financialGoalId) : "");
     }
 
+    const totalCents = Number.parseInt(valor) || 0;
+    const paidCents = pagamentoParcial ? Number.parseInt(valorPago) || 0 : totalCents;
+    const remainingCents = Math.max(totalCents - paidCents, 0);
+    const paymentProgress = totalCents > 0 ? Math.min(100, Math.round((paidCents / totalCents) * 100)) : 0;
+    const paymentActionLabel = tipo === "receita" ? "recebido" : "pago";
+    const remainingLabel = tipo === "receita" ? "A receber" : "Falta pagar";
+
+    const formatCents = (cents: number) =>
+        (cents / 100).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+        });
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -194,7 +199,7 @@ export function TransacaoForm({
     return (
         <Card className="w-full">
             <CardContent className="pt-6 w-full">
-                <form onSubmit={handleSubmit} className="space-y-6 w-full">
+                <form onSubmit={handleSubmit} className="form-shell">
                     {depsError && (
                         <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive" role="alert">
                             {depsError}
@@ -220,107 +225,69 @@ export function TransacaoForm({
                         </Button>
                     </div>
 
-                    <div className="space-y-2 w-full">
-                        <Label>Valor Total</Label>
-                        <CurrencyInput
+                    <CurrencyFormField
+                            label="Valor Total"
                             value={valor}
                             onChange={setValor}
                             required
-                            className="w-full"
-                        />
-                    </div>
+                    />
 
-                    <div className="space-y-2 w-full">
-                        <Label>Descricao</Label>
-                        <Input
+                    <TextFormField
+                            label="Descricao"
                             type="text"
                             placeholder="Ex: Almoco no restaurante"
                             value={descricao}
                             onChange={(e) => setDescricao(e.target.value)}
-                            className="bg-secondary w-full"
                             required
+                    />
+
+                    <FormGrid>
+                        <SelectFormField
+                            label="Categoria"
+                            value={categoria}
+                            onValueChange={setCategoria}
+                            placeholder={depsLoading ? "Carregando..." : "Selecione"}
+                            options={FORM_CATEGORIES}
+                            disabled={depsLoading}
                         />
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        <div className="space-y-2 w-full">
-                            <Label>Categoria</Label>
-                            <Select value={categoria} onValueChange={setCategoria}>
-                                <SelectTrigger className="bg-secondary w-full" disabled={depsLoading}>
-                                    <SelectValue placeholder={depsLoading ? "Carregando..." : "Selecione"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {FORM_CATEGORIES.map((cat) => (
-                                        <SelectItem key={cat.value} value={cat.value}>
-                                            {cat.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <SelectFormField
+                            label="Metodo de Pagamento"
+                            value={metodo}
+                            onValueChange={setMetodo}
+                            placeholder={depsLoading ? "Carregando..." : "Selecione"}
+                            options={PAYMENT_METHODS}
+                            disabled={depsLoading}
+                        />
+                        <SelectFormField
+                            label="Conta / Origem"
+                            value={conta}
+                            onValueChange={setConta}
+                            placeholder={depsLoading ? "Carregando contas..." : "Selecione"}
+                            disabled={depsLoading}
+                            options={
+                                deps?.accounts?.length
+                                    ? deps.accounts.map((acc) => ({
+                                        value: String(acc.id),
+                                        label: `${acc.name} - R$ ${acc.actualBalance.toLocaleString("pt-BR")}`,
+                                    }))
+                                    : [{ value: "no-accounts", label: "Nenhuma conta disponivel", disabled: true }]
+                            }
+                        />
 
-                        <div className="space-y-2 w-full">
-                            <Label>Metodo de Pagamento</Label>
-                            <Select value={metodo} onValueChange={setMetodo}>
-                                <SelectTrigger className="bg-secondary w-full" disabled={depsLoading}>
-                                    <SelectValue placeholder={depsLoading ? "Carregando..." : "Selecione"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PAYMENT_METHODS.map((method) => (
-                                        <SelectItem key={method.value} value={method.value}>
-                                            {method.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        <div className="space-y-2 w-full">
-                            <Label>Conta / Origem</Label>
-                            <Select value={conta} onValueChange={setConta}>
-                                <SelectTrigger className="bg-secondary w-full" disabled={depsLoading}>
-                                    <SelectValue placeholder={depsLoading ? "Carregando contas..." : "Selecione"} />
-                                </SelectTrigger>
-                                <SelectContent className="w-full">
-                                    {deps?.accounts?.length ? (
-                                        deps.accounts.map((acc) => (
-                                            <SelectItem key={acc.id} value={String(acc.id)}>
-                                                {acc.name} - R$ {acc.actualBalance.toLocaleString("pt-BR")}
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem disabled value="no-accounts">
-                                            Nenhuma conta disponivel
-                                        </SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2 w-full">
-                            <Label>Meta</Label>
-                            <Select value={meta} onValueChange={setMeta}>
-                                <SelectTrigger className="bg-secondary w-full" disabled={depsLoading}>
-                                    <SelectValue placeholder={depsLoading ? "Carregando metas..." : "Opcional"} />
-                                </SelectTrigger>
-                                <SelectContent className="w-full">
-                                    {deps?.goals?.length ? (
-                                        deps.goals.map((g) => (
-                                            <SelectItem key={g.id} value={String(g.id)}>
-                                                {g.name}
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem disabled value="none">
-                                            Nenhuma meta cadastrada
-                                        </SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+                        <SelectFormField
+                            label="Meta"
+                            value={meta}
+                            onValueChange={setMeta}
+                            placeholder={depsLoading ? "Carregando metas..." : "Opcional"}
+                            disabled={depsLoading}
+                            options={
+                                deps?.goals?.length
+                                    ? deps.goals.map((g) => ({ value: String(g.id), label: g.name }))
+                                    : [{ value: "none", label: "Nenhuma meta cadastrada", disabled: true }]
+                            }
+                        />
+                    </FormGrid>
 
                     <div className="space-y-4 pt-2 w-full">
                         <div className="flex items-center justify-between w-full">
@@ -350,20 +317,45 @@ export function TransacaoForm({
                         </div>
 
                         {pagamentoParcial && (
-                            <div className="space-y-2 pl-4 border-l-2 border-primary/30 w-full">
-                                <Label>
-                                    {tipo === "receita" ? "Valor Recebido Agora" : "Valor Pago Agora"}
-                                </Label>
-                                <CurrencyInput
+                            <div className="space-y-4 pl-4 border-l-2 border-primary/30 w-full">
+                                <CurrencyFormField
+                                    label={tipo === "receita" ? "Valor Recebido Agora" : "Valor Pago Agora"}
                                     value={valorPago}
                                     onChange={setValorPago}
-                                    max={(Number.parseInt(valor) || 0) / 100}
+                                    max={totalCents / 100}
                                     required
-                                    className="w-full"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    O restante ficara em aberto
-                                </p>
+                                <div className="rounded-md border border-primary/25 bg-primary/10 p-4 dark:bg-primary/15">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div>
+                                            <p className="text-sm font-medium capitalize">{paymentActionLabel}</p>
+                                            <p className="text-lg font-semibold">{formatCents(paidCents)}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-medium">{remainingLabel}</p>
+                                            <p className="text-lg font-semibold text-primary">{formatCents(remainingCents)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <span>Progresso</span>
+                                            <span>{paymentProgress}%</span>
+                                        </div>
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                                            <div
+                                                className="h-full rounded-full bg-primary transition-all"
+                                                style={{ width: `${paymentProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {remainingCents > 0 && (
+                                        <p className="mt-3 text-xs text-muted-foreground">
+                                            O saldo restante aparece em Ações Rápidas, na tela Em Aberto.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

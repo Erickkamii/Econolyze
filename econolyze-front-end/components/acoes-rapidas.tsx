@@ -11,7 +11,7 @@ export function AcoesRapidas() {
         <Button
           asChild
           variant="outline"
-          className="h-20 w-full flex-col gap-2 border-success/30 bg-transparent hover:bg-success/10"
+          className="h-20 w-full flex-col gap-2 border-success/25 bg-success/5 hover:bg-success/10 dark:border-success/40 dark:bg-success/[0.08] dark:hover:bg-success/[0.12]"
         >
           <Link href="/transacao/nova?tipo=receita">
             <Plus className="h-5 w-5 text-success" />
@@ -22,7 +22,7 @@ export function AcoesRapidas() {
         <Button
           asChild
           variant="outline"
-          className="h-20 w-full flex-col gap-2 border-destructive/30 bg-transparent hover:bg-destructive/10"
+          className="h-20 w-full flex-col gap-2 border-destructive/25 bg-destructive/5 hover:bg-destructive/10 dark:border-destructive/40 dark:bg-destructive/[0.08] dark:hover:bg-destructive/[0.12]"
         >
           <Link href="/transacao/nova?tipo=gasto">
             <Minus className="h-5 w-5 text-destructive" />
@@ -33,7 +33,7 @@ export function AcoesRapidas() {
         <Button
           asChild
           variant="outline"
-          className="h-20 w-full flex-col gap-2 border-primary/30 bg-transparent hover:bg-primary/10"
+          className="h-20 w-full flex-col gap-2 border-primary/25 bg-primary/5 hover:bg-primary/10 dark:border-primary/40 dark:bg-primary/[0.08] dark:hover:bg-primary/[0.12]"
         >
           <Link href="/recorrentes">
             <Repeat className="h-5 w-5 text-primary" />
@@ -46,7 +46,7 @@ export function AcoesRapidas() {
         <Button
           asChild
           variant="outline"
-          className="h-20 w-full flex-col gap-2 border-blue-500/30 bg-transparent hover:bg-blue-500/10"
+          className="h-20 w-full flex-col gap-2 border-blue-500/25 bg-blue-500/5 hover:bg-blue-500/10 dark:border-blue-500/40 dark:bg-blue-500/[0.08] dark:hover:bg-blue-500/[0.12]"
         >
           <Link href="/contas">
             <Wallet className="h-5 w-5 text-blue-500" />
@@ -57,7 +57,7 @@ export function AcoesRapidas() {
         <Button
           asChild
           variant="outline"
-          className="h-20 w-full flex-col gap-2 border-orange-500/30 bg-transparent hover:bg-orange-500/10"
+          className="h-20 w-full flex-col gap-2 border-orange-500/25 bg-orange-500/5 hover:bg-orange-500/10 dark:border-orange-500/40 dark:bg-orange-500/[0.08] dark:hover:bg-orange-500/[0.12]"
         >
           <Link href="/pagamentos">
             <Clock className="h-5 w-5 text-orange-500" />
