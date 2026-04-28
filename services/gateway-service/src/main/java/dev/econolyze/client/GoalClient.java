@@ -45,7 +45,6 @@ public interface GoalClient {
     );
 
     @GET
-    @Path("/all")
     @Timeout(5000)
     @Retry(maxRetries = 2)
     Uni<RestResponse<List<FinancialGoalResponse>>> getAllGoals(

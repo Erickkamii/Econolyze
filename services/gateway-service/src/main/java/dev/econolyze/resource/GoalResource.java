@@ -19,6 +19,8 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 
+import java.util.List;
+
 @Path("/api/goal")
 @Authenticated
 public class GoalResource {
@@ -40,6 +42,14 @@ public class GoalResource {
         if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
         return goalClient.createGoal(headers.getHeaderString("Authorization"), request)
                 .onFailure().invoke(e -> LOG.errorf("Erro ao criar meta: %s", e.getMessage()))
+                .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
+    }
+
+    @GET
+    public Uni<RestResponse<List<FinancialGoalResponse>>> getAll(@Context HttpHeaders headers){
+        if (unauthorized()) return Uni.createFrom().item(RestResponse.status(RestResponse.Status.UNAUTHORIZED));
+        return goalClient.getAllGoals(headers.getHeaderString("Authorization"))
+                .onFailure().invoke(e-> LOG.errorf("Erro ao consultar Metas: %s", e.getMessage()))
                 .onFailure().transform(e -> new ServiceUnavailableException("financial-service", e));
     }
 

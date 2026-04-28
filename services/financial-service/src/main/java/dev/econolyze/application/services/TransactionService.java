@@ -11,6 +11,7 @@ import dev.econolyze.domain.entity.Payment;
 import dev.econolyze.domain.entity.Transaction;
 import dev.econolyze.domain.enums.Category;
 import dev.econolyze.domain.enums.PaymentStatus;
+import dev.econolyze.domain.enums.TransactionStatus;
 import dev.econolyze.domain.enums.TransactionType;
 import dev.econolyze.domain.exception.UserValidationException;
 import dev.econolyze.infrastructure.repository.TransactionRepository;
@@ -117,28 +118,28 @@ public class TransactionService {
 
     @WithTransaction
     public Uni<TransactionResponse> updateTransaction(Long transactionId, TransactionUpdateRequest request){
-        return transactionRepository.findById(transactionId)
+        return transactionRepository.findTransactionById(transactionId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Transação não encontrada"))
                 .chain(existing -> {
                     if (!existing.getUserId().equals(userContext.getUserId())) {
                         return Uni.createFrom().failure(new ForbiddenException("Acesso negado a este recurso"));
                     }
-                    boolean hasCompletedPayments = existing.getPayments().stream()
-                            .anyMatch(p -> p.getStatus().equals(PaymentStatus.COMPLETED));
-                    if (hasCompletedPayments && request.amount().compareTo(existing.getAmount()) != 0) {
+                    boolean isCompleted = existing.getStatus().equals(TransactionStatus.PAID);
+                    if (isCompleted && request.amount().compareTo(existing.getAmount()) != 0) {
                         return Uni.createFrom().failure(new UserValidationException(
                                 "Não é permitido alterar o valor de uma transação com pagamentos concluídos"
                         ));
                     }
                     existing.setDescription(request.description());
                     existing.setCategory(request.category());
-                    if (!hasCompletedPayments) {
+                    if (!isCompleted) {
                         existing.setAmount(request.amount());
                         existing.recalculateStatus();
                     }
                     return Uni.createFrom().item(existing);
                 })
-                .map(updated -> transactionMapper.mapToResponse(updated));
+                .map(updated -> transactionMapper.mapToResponse(updated))
+                .onFailure().invoke(e -> log.error("Falha na pipeline: %s", e.getMessage(), e));
     }
 
     @WithSession

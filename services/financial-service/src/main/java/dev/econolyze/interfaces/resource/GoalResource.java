@@ -31,7 +31,6 @@ public class GoalResource {
     }
 
     @GET
-    @Path("/all")
     public Uni<RestResponse<List<FinancialGoalResponse>>> getAll() {
         return goalService.getAllGoals().map(RestResponse::ok);
     }
