@@ -34,31 +34,34 @@ public class BalanceService {
     UserContext userContext;
 
     @WithTransaction
-    public Uni<BalanceResponse> getBalanceByUserId(){
+    public Uni<BalanceResponse> getBalanceByUserId() {
         Long userId = userContext.getUserId();
+
         return balanceRepository.findByUserIdForUpdate(userId)
-                .flatMap(balance -> {
-                    if (balance == null){
+                .chain(balance -> {
+                    if (balance == null) {
                         Balance newBalance = newBalance(userId);
+
                         return balanceRepository.persist(newBalance)
-                                .map(balanceMapper::mapToDTO)
-                                .map(dto -> new BalanceResponse(
-                                        newBalance.getBalance(),
-                                        newBalance.getDate(),
-                                        newBalance.getIncome(),
-                                        newBalance.getExpenses(),
-                                        setBalanceDifference(dto)
-                                ));
-                    } else{
-                        return updateUserBalance(userId)
-                                .map(ignored -> new BalanceResponse(
-                                        balance.getBalance(),
-                                        balance.getDate(),
-                                        balance.getIncome(),
-                                        balance.getExpenses(),
-                                        setBalanceDifference(balanceMapper.mapToDTO(balance))
+                                .chain(() -> balanceRepository.flush())
+                                .chain(() -> balanceRepository.findByUserIdForUpdate(userId))
+                                .map(persisted -> new BalanceResponse(
+                                        persisted.getBalance(),
+                                        persisted.getDate(),
+                                        persisted.getIncome(),
+                                        persisted.getExpenses(),
+                                        setBalanceDifference(balanceMapper.mapToDTO(persisted))
                                 ));
                     }
+                    return updateUserBalance(userId)
+                            .chain(() -> balanceRepository.findById(userId))
+                            .map(updated -> new BalanceResponse(
+                                    updated.getBalance(),
+                                    updated.getDate(),
+                                    updated.getIncome(),
+                                    updated.getExpenses(),
+                                    setBalanceDifference(balanceMapper.mapToDTO(updated))
+                            ));
                 });
     }
 
@@ -66,7 +69,6 @@ public class BalanceService {
         return balanceDTO.getBalance().subtract(balanceDTO.getIncome().subtract(balanceDTO.getExpenses()));
     }
 
-    @WithSession
     public Uni<Void> updateUserBalance(Long userId) {
         return balanceRepository.findById(userId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Balance not found!"))
