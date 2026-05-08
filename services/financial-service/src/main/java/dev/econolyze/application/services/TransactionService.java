@@ -4,7 +4,9 @@ import dev.econolyze.application.dto.PagedResponse;
 import dev.econolyze.application.dto.TransactionDTO;
 import dev.econolyze.application.dto.request.TransactionRequest;
 import dev.econolyze.application.dto.request.TransactionUpdateRequest;
+import dev.econolyze.application.dto.response.TransactionByCategoryResponse;
 import dev.econolyze.application.dto.response.TransactionResponse;
+import dev.econolyze.application.dto.response.TransactionSummaryResponse;
 import dev.econolyze.application.mapper.TransactionMapper;
 import dev.econolyze.application.security.UserContext;
 import dev.econolyze.domain.entity.Payment;
@@ -28,8 +30,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -158,5 +164,88 @@ public class TransactionService {
                         .replaceWith(transaction)
                 )
                 .map(transactionMapper::mapToResponse);
+    }
+
+    @WithSession
+    public Uni<List<TransactionDTO>> getAllTransactionsInternal(LocalDate date) {
+        return transactionRepository.findByUserIdAndDate(date)
+                .map(t -> t.stream().map(transactionMapper::mapToDTO).toList());
+    }
+
+    @WithSession
+    public Uni<TransactionSummaryResponse> getFinancialSummary(LocalDate startDateParsed, LocalDate endDateParsed) {
+        return transactionRepository.findByUserIdAndPeriod(userContext.getUserId(),startDateParsed, endDateParsed)
+                .map(transactions -> {
+                    BigDecimal income = transactions.stream()
+                            .filter(t -> t.getType().equals(TransactionType.INCOME))
+                            .map(Transaction::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal expenses = transactions.stream()
+                            .filter(t -> t.getType().equals(TransactionType.EXPENSE))
+                            .map(Transaction::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                   return new TransactionSummaryResponse(
+                           startDateParsed,
+                           endDateParsed,
+                           income,
+                           expenses,
+                           income.subtract(expenses),
+                           (long) transactions.size()
+                   );
+                });
+    }
+
+    @WithSession
+    public Uni<List<TransactionByCategoryResponse>> getByType(LocalDate start, LocalDate end, String type) {
+        TransactionType transactionType = null;
+
+        if (type != null && !type.isBlank()) {
+            try {
+                transactionType = TransactionType.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return Uni.createFrom().failure(
+                        new BadRequestException("type inválido. Use INCOME ou EXPENSE.")
+                );
+            }
+        }
+
+        return transactionRepository.findByPeriodAndType(userContext.getUserId(), start, end, transactionType)
+                .map(transactions -> {
+                    BigDecimal total = transactions.stream()
+                            .map(Transaction::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    if (total.compareTo(BigDecimal.ZERO) == 0) {
+                        return List.of();
+                    }
+
+                    return transactions.stream()
+                            .collect(Collectors.groupingBy(
+                                    t -> t.getType() + "|" + t.getCategory(),
+                                    Collectors.mapping(
+                                            Transaction::getAmount,
+                                            Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
+                                    )
+                            ))
+                            .entrySet()
+                            .stream()
+                            .map(entry -> {
+                                String[] key = entry.getKey().split("\\|");
+                                BigDecimal amount = entry.getValue();
+
+                                BigDecimal percentage = amount
+                                        .multiply(BigDecimal.valueOf(100))
+                                        .divide(total, 2, RoundingMode.HALF_UP);
+
+                                return new TransactionByCategoryResponse(
+                                        TransactionType.valueOf(key[0]),
+                                        Category.valueOf(key[1]),
+                                        amount,
+                                        percentage
+                                );
+                            })
+                            .sorted(Comparator.comparing(TransactionByCategoryResponse::amount).reversed())
+                            .toList();
+                });
     }
 }

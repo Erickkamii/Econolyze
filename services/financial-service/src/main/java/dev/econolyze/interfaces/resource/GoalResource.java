@@ -1,7 +1,9 @@
 package dev.econolyze.interfaces.resource;
 
+import dev.econolyze.application.dto.FinancialGoalDTO;
 import dev.econolyze.application.dto.GoalProgressDTO;
 import dev.econolyze.application.dto.request.FinancialGoalRequest;
+import dev.econolyze.application.dto.request.InvestmentProjectionRequest;
 import dev.econolyze.application.dto.response.FinancialGoalResponse;
 import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
 import dev.econolyze.application.services.GoalService;
@@ -74,4 +76,28 @@ public class GoalResource {
         return result.map(RestResponse::ok);
     }
 
+    @GET
+    @Path("/active")
+    public Uni<RestResponse<List<FinancialGoalDTO>>> getTransactionsByCategory(){
+        return goalService.getActiveGoals()
+                .map(RestResponse::ok)
+                .onFailure().recoverWithItem(RestResponse.serverError());
+    }
+
+    @GET
+    @Path("/name")
+    public Uni<RestResponse<List<FinancialGoalDTO>>> getGoalsByName(@QueryParam("name") String name){
+        return goalService.getGoalsByName(name)
+                .map(RestResponse::ok)
+                .onFailure().recoverWithItem(RestResponse.serverError());
+    }
+
+
+    @POST
+    @Path("/projection")
+    public Uni<RestResponse<InvestmentProjectionResponse>> calculateProjection(InvestmentProjectionRequest request){
+        return investmentService.calculateProjection(request)
+                .map(RestResponse::ok)
+                .onFailure().recoverWithItem(RestResponse.serverError());
+    }
 }

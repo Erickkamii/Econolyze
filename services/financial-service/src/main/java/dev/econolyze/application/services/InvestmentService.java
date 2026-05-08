@@ -2,6 +2,7 @@ package dev.econolyze.application.services;
 
 import dev.econolyze.application.dto.InvestmentProjectionDTO;
 import dev.econolyze.application.dto.TransactionDTO;
+import dev.econolyze.application.dto.request.InvestmentProjectionRequest;
 import dev.econolyze.application.dto.response.InvestmentProjectionResponse;
 import dev.econolyze.application.mapper.InvestmentMapper;
 import dev.econolyze.application.security.UserContext;
@@ -100,5 +101,24 @@ public class InvestmentService {
 
     private BigDecimal getCdiAnnualRate(){
         return cdiService.getCurrentCdiRate().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+    }
+
+    @WithSession
+    public Uni<InvestmentProjectionResponse> calculateProjection(InvestmentProjectionRequest request) {
+        if (request == null || request.amount() == null || request.months() == null)
+            return Uni.createFrom().failure(new IllegalArgumentException("Amount and months cannot be null"));
+        if (request.amount().compareTo(BigDecimal.ZERO) <= 0)
+            return Uni.createFrom().failure(new IllegalArgumentException("Amount must be greater than zero"));
+        if (request.months()<0)
+            return Uni.createFrom().failure(new IllegalArgumentException("Months must be greater than zero"));
+        BigDecimal amount = request.amount();
+        Integer months = request.months();
+        BigDecimal cdiAnnualRate = getCdiAnnualRate();
+        BigDecimal cdiMonthlyRate = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(cdiAnnualRate).doubleValue(), 1.0 / 12) - 1);
+        BigDecimal accumulatedFactor = BigDecimal.valueOf(Math.pow(BigDecimal.ONE.add(cdiMonthlyRate).doubleValue(), months));
+        BigDecimal amountCdi = amount.multiply(accumulatedFactor).setScale(2, RoundingMode.HALF_UP);
+        return Uni.createFrom().item(
+                new InvestmentProjectionResponse(amount, amountCdi, "Investment", "Cdi Projection for "+months+" months", LocalDate.now())
+        );
     }
 }

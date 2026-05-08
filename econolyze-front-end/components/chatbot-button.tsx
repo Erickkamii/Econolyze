@@ -1,63 +1,191 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+import { useEffect, useRef, useState } from "react"
+import { MessageCircle, Send, X } from "lucide-react"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
-import { MessageCircle, X, Send } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { ChatService } from "@/lib/services/chat.service"
+import { cn } from "@/lib/utils"
+
+type ChatMessage = {
+  id: string
+  role: "user" | "assistant"
+  content: string
+}
+
+const TEXTAREA_LINE_HEIGHT = 20
+const TEXTAREA_VERTICAL_PADDING = 16
+const TEXTAREA_MAX_HEIGHT = TEXTAREA_LINE_HEIGHT * 3 + TEXTAREA_VERTICAL_PADDING
+
+function createId() {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function appendStreamChunk(current: string, chunk: string) {
+  if (!current) return chunk
+  if (!chunk) return current
+
+  const last = current.at(-1) ?? ""
+  const first = chunk.at(0) ?? ""
+  const needsSpace = /\p{L}|\p{N}/u.test(last) && /\p{L}|\p{N}/u.test(first)
+
+  return `${current}${needsSpace ? " " : ""}${chunk}`
+}
 
 export function ChatbotButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: "Olá! Como posso ajudar você hoje?",
+    },
+  ])
+  const [isStreaming, setIsStreaming] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages, isOpen])
+
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    textarea.style.height = "auto"
+    textarea.style.height = `${Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`
+  }, [message])
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
+
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault()
+
+    const content = message.trim()
+    if (!content || isStreaming) return
+
+    const assistantId = createId()
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    setMessage("")
+    setIsStreaming(true)
+    setMessages((current) => [
+      ...current,
+      { id: createId(), role: "user", content },
+      { id: assistantId, role: "assistant", content: "" },
+    ])
+
+    try {
+      await ChatService.stream({
+        message: content,
+        signal: controller.signal,
+        onChunk: (chunk) => {
+          setMessages((current) =>
+            current.map((item) =>
+              item.id === assistantId
+                ? { ...item, content: appendStreamChunk(item.content, chunk) }
+                : item,
+            ),
+          )
+        },
+      })
+    } catch (error: any) {
+      if (error?.name !== "AbortError") {
+        toast.error(error.message ?? "Erro ao conversar com o assistente")
+        setMessages((current) =>
+          current.map((item) =>
+            item.id === assistantId
+              ? { ...item, content: "Não consegui responder agora. Tente novamente em instantes." }
+              : item,
+          ),
+        )
+      }
+    } finally {
+      setIsStreaming(false)
+      abortRef.current = null
+    }
+  }
+
+  function handleClose() {
+    abortRef.current?.abort()
+    setIsOpen(false)
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault()
+      void handleSubmit()
+    }
+  }
 
   return (
     <>
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-80 max-w-[calc(100vw-3rem)] shadow-lg z-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b border-border">
-            <CardTitle className="text-base">Assistente Econolyze</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">WIP</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+        <Card className="fixed bottom-24 right-6 z-50 flex h-[min(32rem,calc(100vh-8rem))] w-[23rem] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-md border-border/70 bg-card/95 shadow-2xl backdrop-blur">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 px-3 py-2">
+            <CardTitle className="text-sm font-semibold">Assistente Econolyze</CardTitle>
+            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handleClose}>
+              <X className="h-4 w-4" />
+            </Button>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="h-64 overflow-y-auto p-4 space-y-3">
-              <div className="bg-secondary p-3 rounded-lg text-sm">
-                <p className="text-foreground">Olá! 👋 Como posso ajudar você hoje?</p>
-              </div>
-              <div className="text-xs text-muted-foreground pl-3">
-                Exemplos:
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Qual foi meu gasto total este mês?</li>
-                  <li>Mostrar investimentos</li>
-                  <li>Criar transação recorrente</li>
-                </ul>
-              </div>
+          <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background/20 p-0">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-3 py-4">
+              {messages.map((item) => (
+                <div
+                  key={item.id}
+                  className={cn(
+                    "max-w-[88%] overflow-hidden rounded-md border p-3 text-sm shadow-sm",
+                    item.role === "user"
+                      ? "ml-auto border-primary/40 bg-primary/15 text-foreground dark:bg-primary/[0.12]"
+                      : "mr-auto border-border/70 bg-secondary/80 text-foreground",
+                  )}
+                >
+                  {item.content ? (
+                    <p className="whitespace-pre-wrap break-words">{item.content}</p>
+                  ) : (
+                    <p className="text-muted-foreground">Pensando...</p>
+                  )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t border-border">
-              <div className="flex gap-2">
-                <Input
+            <form onSubmit={handleSubmit} className="shrink-0 border-t border-border/70 bg-card/95 p-3 pb-2.5">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={textareaRef}
                   placeholder="Digite sua mensagem..."
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="bg-secondary"
+                  onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  className="form-control min-h-10 resize-none overflow-y-auto overflow-x-hidden rounded-md px-3 py-2 text-sm leading-5 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  style={{ maxHeight: TEXTAREA_MAX_HEIGHT }}
+                  disabled={isStreaming}
                 />
-                <Button size="icon" className="shrink-0">
+                <Button size="icon" className="h-10 shrink-0 rounded-full" disabled={!message.trim() || isStreaming}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </form>
           </CardContent>
         </Card>
       )}
 
       <Button
         size="icon"
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
-        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg"
+        onClick={() => setIsOpen((current) => !current)}
       >
         <MessageCircle className="h-6 w-6" />
       </Button>

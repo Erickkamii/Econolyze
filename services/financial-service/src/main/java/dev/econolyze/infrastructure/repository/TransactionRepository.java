@@ -9,6 +9,7 @@ import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @ApplicationScoped
@@ -67,5 +68,43 @@ public class TransactionRepository implements PanacheRepository<Transaction> {
 
                     return ids.stream().map(map::get).toList();
                 });
+    }
+
+    public Uni<List<Transaction>> findByUserIdAndDate(LocalDate date) {
+        return find("""
+            SELECT DISTINCT t
+            FROM Transaction t
+            LEFT JOIN FETCH t.payments
+            WHERE t.date = ?1
+            """, date)
+                .list();
+    }
+
+    public Uni<List<Transaction>> findByUserIdAndPeriod(Long userId, LocalDate startDateParsed, LocalDate endDateParsed) {
+        return find("""
+            userId = ?1
+            and date >= ?2
+            and date <= ?3
+            """, userId, startDateParsed, endDateParsed)
+                .list();
+    }
+
+    public Uni<List<Transaction>> findByPeriodAndType(Long userId, LocalDate start, LocalDate end, TransactionType transactionType) {
+        if (transactionType == null) {
+            return find("""
+                userId = ?1
+                and date >= ?2
+                and date <= ?3
+                """, userId, start, end)
+                    .list();
+        }
+
+        return find("""
+            userId = ?1
+            and date >= ?2
+            and date <= ?3
+            and type = ?4
+            """, userId, start, end, transactionType)
+                .list();
     }
 }

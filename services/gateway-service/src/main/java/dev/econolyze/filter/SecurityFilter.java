@@ -81,7 +81,12 @@ public class SecurityFilter implements ContainerRequestFilter {
     private boolean isLocalEnvironment(ContainerRequestContext ctx) {
         String hostHeader = ctx.getHeaderString("Host");
         if (hostHeader == null) return false;
-        return hostHeader.contains("localhost") || hostHeader.contains("127.0.0.1");
+
+        return hostHeader.contains("localhost")
+                || hostHeader.contains("127.0.0.1")
+                || hostHeader.startsWith("192.168.")
+                || hostHeader.startsWith("10.")
+                || hostHeader.matches("^172\\.(1[6-9]|2[0-9]|3[0-1])\\..*");
     }
 
 }

@@ -26,6 +26,15 @@ const frequencyLabels: Record<string, string> = {
   YEARLY: "Anual",
 }
 
+function formatDateOnly(value: string) {
+  const [datePart] = value.split("T")
+  const [year, month, day] = datePart.split("-")
+
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
 export function RecorrentesList() {
   const { accessToken, isLoading: authLoading } = useAuth()
   const [items, setItems] = useState<RecurringTemplate[]>([])
@@ -126,7 +135,7 @@ export function RecorrentesList() {
                                 <span>•</span>
                                 <span>
                                   Próximo:{" "}
-                                  {new Date(item.nextOccurrence).toLocaleDateString("pt-BR")}
+                                  {formatDateOnly(item.nextOccurrence)}
                                 </span>
                               </>
                           )}
@@ -135,7 +144,7 @@ export function RecorrentesList() {
                                 <span>•</span>
                                 <span>
                                   Até:{" "}
-                                  {new Date(item.endDate).toLocaleDateString("pt-BR")}
+                                  {formatDateOnly(item.endDate)}
                                 </span>
                               </>
                           )}

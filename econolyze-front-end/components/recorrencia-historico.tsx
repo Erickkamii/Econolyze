@@ -20,6 +20,15 @@ interface Props {
   recorrenciaId: number
 }
 
+function formatDateOnly(value: string) {
+  const [datePart] = value.split("T")
+  const [year, month, day] = datePart.split("-")
+
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
 export function RecorrenciaHistorico({ recorrenciaId }: Props) {
   const { accessToken, isLoading: authLoading } = useAuth()
   const [template, setTemplate] = useState<RecurringTemplate | null>(null)
@@ -68,7 +77,7 @@ export function RecorrenciaHistorico({ recorrenciaId }: Props) {
                   {template.nextOccurrence && (
                       <span>
                                         Próximo:{" "}
-                        {new Date(template.nextOccurrence).toLocaleDateString("pt-BR")}
+                                  {formatDateOnly(template.nextOccurrence)}
                                     </span>
                   )}
                   <span className={template.isActive ? "text-green-500" : "text-red-500"}>

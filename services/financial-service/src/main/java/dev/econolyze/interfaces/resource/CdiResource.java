@@ -8,10 +8,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Path("/api/cdi")
 public class CdiResource {
 
@@ -20,14 +22,14 @@ public class CdiResource {
 
     @GET
     @Path("/rate")
-    public RestResponse<BigDecimal> getCdiRate() {
-        BigDecimal rate = cdiService.getCurrentCdiRate();
-        return RestResponse.ok(rate);
+    public RestResponse<CdiRateDTO> getCdiRate() {
+        return RestResponse.ok(cdiService.getCdiRateInfo());
     }
 
     @GET
     @Path("/rate/async")
     public Uni<RestResponse<BigDecimal>> getCdiRateAsync() {
+        log.info("Transmitindo a taxa CDI");
         return cdiService.getCurrentCdiRateAsync()
                 .onItem().transform(RestResponse::ok)
                 .onFailure().recoverWithItem(RestResponse.serverError());

@@ -88,4 +88,16 @@ public class GoalService {
                 .status(request.status())
                 .build();
     }
+
+    @WithSession
+    public Uni<List<FinancialGoalDTO>> getActiveGoals() {
+        return financialGoalRepository.findActiveByUserId(userContext.getUserId())
+                .map(g -> g.stream().map(financialGoalMapper::mapToDTO).toList());
+    }
+
+    @WithSession
+    public Uni<List<FinancialGoalDTO>> getGoalsByName(String name) {
+        return financialGoalRepository.findByName(userContext.getUserId(), name)
+                .map(g -> g.stream().map(financialGoalMapper::mapToDTO).toList());
+    }
 }

@@ -92,7 +92,7 @@ public class RecurringTransactionService {
         );
     }
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 15 * * ?")
     public void processRecurringTransactions() {
         doProcess().await().indefinitely();
     }
