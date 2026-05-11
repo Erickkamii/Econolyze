@@ -7,7 +7,7 @@ import dev.econolyze.application.dto.AccountDTO;
 import dev.econolyze.domain.entity.Account;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi")
+@Mapper(config = QuarkusMapperConfig.class)
 public interface AccountMapper {
     Account mapToEntity(CreateAccountRequest request);
     Account mapToEntity(UpdateAccountRequest request);

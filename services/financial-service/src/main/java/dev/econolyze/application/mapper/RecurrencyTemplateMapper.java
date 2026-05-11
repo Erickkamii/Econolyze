@@ -5,7 +5,7 @@ import dev.econolyze.application.dto.response.RecurringTemplateResponse;
 import dev.econolyze.domain.entity.RecurringTemplate;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi")
+@Mapper(config = QuarkusMapperConfig.class, uses = TransactionMapper.class)
 public interface RecurrencyTemplateMapper {
     RecurrencyTemplateDTO mapToDTO(RecurringTemplate recurrencyTemplate);
     RecurringTemplate mapToEntity(RecurrencyTemplateDTO recurrencyTemplateDTO);

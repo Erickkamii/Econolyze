@@ -8,20 +8,23 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
-@Mapper(componentModel = "cdi")
+@Mapper(config = QuarkusMapperConfig.class, uses = PaymentMapper.class)
 public interface TransactionMapper {
 
     Transaction mapToEntity(TransactionDTO transactionDTO);
+
     TransactionDTO mapToDTO(Transaction transaction);
+
     TransactionDTO mapToDTO(TransactionRequest transactionRequest);
+
     TransactionResponse mapToResponse(Transaction transaction);
 
     @AfterMapping
     default void ensurePaymentsInitialized(@MappingTarget Transaction transaction) {
         if (transaction.getPayments() == null) {
-            transaction.setPayments(new ArrayList<>());
+            transaction.setPayments(new HashSet<>());
         }
     }
 }

@@ -2,6 +2,7 @@ package com.econolyze.dev.application.services;
 
 import com.econolyze.dev.application.agents.FinancialAiService;
 import com.econolyze.dev.application.memory.ConversationBuffer;
+import com.econolyze.dev.application.tools.FinancialDataTools;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -47,7 +48,10 @@ public class ChatService {
     @Named("profileStore")
     EmbeddingStore<TextSegment> profileStore;
 
-    public Multi<String> chat(String message, Long userId) {
+    @Inject
+    FinancialDataTools financialDataTools;
+
+    public Uni<String> chat(String message, Long userId) {
         String financialContext = searchStore(
                 transactionStore,
                 message,
@@ -77,15 +81,31 @@ public class ChatService {
 
         String recentConversation = conversationBuffer.getRecentMessage(userId);
 
-        StringBuilder assistantAnswer = new StringBuilder();
+        String routingHint;
 
-        String routingHint = isCdiQuestion(message)
-                ? "A pergunta envolve CDI. Use as ferramentas de CDI/investimento do sistema para taxa atual ou projeção."
-                : "Sem instrução especial de roteamento.";
+        if (requiresCdiTool(message)) {
+            String cdiContext = financialDataTools.getTaxaCdi();
+
+            routingHint = """
+            A pergunta exige consulta da taxa CDI atual.
+            A consulta já foi feita no sistema Econolyze.
+            
+            Resultado da consulta:
+            %s
+            
+            Use obrigatoriamente esse resultado na resposta.
+            Não diga que não conseguiu consultar o sistema, a menos que o resultado acima informe erro.
+            Não chame novamente a ferramenta getTaxaCdi.
+            """.formatted(cdiContext);
+        } else {
+            routingHint = "Sem instrução especial de roteamento.";
+        }
+
         String currentDate = LocalDate.now().toString();
         String currentYear = String.valueOf(LocalDate.now().getYear());
 
-        return aiService.chat(
+        return Uni.createFrom()
+                .item(() -> aiService.chat(
                         message,
                         financialContext,
                         profileMemory,
@@ -94,11 +114,10 @@ public class ChatService {
                         routingHint,
                         currentDate,
                         currentYear
-                )
-                .onItem().invoke(assistantAnswer::append)
-                .onCompletion().call(() -> {
-                    String answer = assistantAnswer.toString();
-
+                ))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .map(this::removeToolCalls)
+                .call(answer -> {
                     conversationBuffer.append(userId, "Usuário", message);
                     conversationBuffer.append(userId, "Econolyze", answer);
 
@@ -111,6 +130,14 @@ public class ChatService {
                             .onFailure().recoverWithItem(false)
                             .replaceWithVoid();
                 });
+    }
+
+    private String removeToolCalls(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text.replaceAll("<function=[^>]+>.*?</function>", "");
     }
 
     private void saveConversationTurn(Long userId, String userMessage, String assistantAnswer) {
@@ -193,12 +220,22 @@ public class ChatService {
                 .toList();
     }
 
-    private boolean isCdiQuestion(String message) {
+    private boolean requiresCdiTool(String message) {
         String normalized = message.toLowerCase();
 
-        return normalized.contains("cdi")
-                || normalized.contains("taxa di")
-                || normalized.contains("rendimento")
-                || normalized.contains("rende");
+        return normalized.contains("taxa cdi")
+                || normalized.contains("cdi atual")
+                || normalized.contains("taxa atual")
+                || normalized.contains("qual o cdi")
+                || normalized.contains("quanto está o cdi")
+                || normalized.contains("quanto ta o cdi")
+                || normalized.contains("quanto tá o cdi")
+                || normalized.contains("rendimento cdi")
+                || normalized.contains("rende no cdi")
+                || normalized.contains("render no cdi")
+                || normalized.contains("simula")
+                || normalized.contains("simule")
+                || normalized.contains("projeção")
+                || normalized.contains("projecao");
     }
 }

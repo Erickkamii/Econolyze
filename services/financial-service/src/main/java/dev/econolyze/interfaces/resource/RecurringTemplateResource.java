@@ -11,11 +11,13 @@ import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Path("/api/recurring-template")
 @RequiredArgsConstructor
 public class RecurringTemplateResource {
@@ -37,7 +39,7 @@ public class RecurringTemplateResource {
 
     @GET
     public Uni<RestResponse<List<RecurringTemplateResponse>>> listActiveRecurrencyTemplates() {
-        return recurringTransactionService.getAllTemplatesByUserId().map(RestResponse::ok);
+        return recurringTransactionService.getAllTemplatesByUserId().map(RestResponse::ok).invoke(r -> log.info("Recurring templates: {}", r.getEntity()));
     }
 
     @GET

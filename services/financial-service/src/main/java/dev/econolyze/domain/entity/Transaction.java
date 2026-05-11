@@ -7,7 +7,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(schema = "finance", name = "transactions")
@@ -45,8 +47,8 @@ public class Transaction {
     private TransactionStatus status = TransactionStatus.PENDING;
     private String description;
     private LocalDate date;
-    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Payment> payments = new ArrayList<>();
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Payment> payments = new HashSet<>();
 
 
 

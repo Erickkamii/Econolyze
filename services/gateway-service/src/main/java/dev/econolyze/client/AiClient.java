@@ -2,6 +2,7 @@ package dev.econolyze.client;
 
 import dev.econolyze.dto.request.ChatRequest;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -17,8 +18,8 @@ public interface AiClient {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.SERVER_SENT_EVENTS)
-    Multi<String> chat(
+    @Produces(MediaType.APPLICATION_JSON)
+    Uni<String> chat(
             @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
             ChatRequest request
     );

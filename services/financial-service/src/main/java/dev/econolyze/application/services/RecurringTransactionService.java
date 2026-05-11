@@ -21,12 +21,14 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class RecurringTransactionService {
@@ -92,26 +94,47 @@ public class RecurringTransactionService {
         );
     }
 
-    @Scheduled(cron = "0 0 15 * * ?")
-    public void processRecurringTransactions() {
-        doProcess().await().indefinitely();
+    @Scheduled(cron = "0 10 16 * * ?", timeZone = "America/Sao_Paulo")
+    public Uni<Void> processRecurringTransactions() {
+        return doProcess()
+                .invoke(() -> log.info("Transações recorrentes processadas com sucesso"))
+                .onFailure().invoke(e -> log.error("Erro ao processar transações recorrentes", e));
     }
 
     @WithTransaction
-    public Uni<Void> doProcess(){
+    public Uni<Void> doProcess() {
         LocalDate today = LocalDate.now();
+
+        log.info("Processando recorrências até: {}", today);
+
         return recurrencyTemplateRepository.findActiveWithNextOccurrenceBefore(today)
                 .flatMap(templates -> {
+                    log.info("Templates encontrados: {}", templates.size());
+
                     List<Uni<Void>> tasks = templates.stream()
                             .filter(this::shouldProcess)
-                            .map(template ->
-                                    createTransactionFromTemplate(template)
-                                            .invoke(ignored -> updateNextOccurrence(template))
-                            )
+                            .map(this::processTemplate)
                             .toList();
-                    if(tasks.isEmpty()) return Uni.createFrom().voidItem();
+
+                    log.info("Templates que serão processados: {}", tasks.size());
+
+                    if (tasks.isEmpty()) {
+                        return Uni.createFrom().voidItem();
+                    }
+
                     return Uni.combine().all().unis(tasks).discardItems();
                 });
+    }
+
+    private Uni<Void> processTemplate(RecurringTemplate template) {
+        log.info("Processando template id={}, userId={}, nextOccurrence={}",
+                template.getId(),
+                template.getUserId(),
+                template.getNextOccurrence());
+
+        return createTransactionFromTemplate(template)
+                .invoke(() -> updateNextOccurrence(template))
+                .replaceWithVoid();
     }
 
     private Uni<Void> createTransactionFromTemplate(RecurringTemplate template) {
@@ -190,6 +213,7 @@ public class RecurringTransactionService {
     @WithSession
     public Uni<List<RecurringTemplateResponse>> getAllTemplatesByUserId() {
         return recurrencyTemplateRepository.findActiveByUserId(userContext.getUserId())
+                .invoke(r -> log.info("Templates carregados: {}", r))
                 .map(t -> t.stream()
                         .map(recurrencyTemplateMapper::mapToResponse)
                         .toList());
@@ -262,24 +286,48 @@ public class RecurringTransactionService {
         LocalDate today = LocalDate.now();
         LocalDate nextOccurrence = template.getNextOccurrence();
 
+        log.info("""
+        Validando recorrência:
+        id={}
+        active={}
+        nextOccurrence={}
+        today={}
+        maxOccurrences={}
+        timesProcessed={}
+        endDate={}
+        """,
+                template.getId(),
+                template.getIsActive(),
+                nextOccurrence,
+                today,
+                template.getMaxOccurrences(),
+                template.getTimesProcessed(),
+                template.getEndDate()
+        );
+
         if (nextOccurrence == null || nextOccurrence.isAfter(today)) {
+            log.info("Template {} ignorado: nextOccurrence inválido ou futuro", template.getId());
             return false;
         }
 
         if (!template.getIsActive()) {
+            log.info("Template {} ignorado: inativo", template.getId());
             return false;
         }
 
         if (template.getMaxOccurrences() != null
                 && template.getTimesProcessed() >= template.getMaxOccurrences()) {
+            log.info("Template {} ignorado: limite de ocorrências atingido", template.getId());
             return false;
         }
 
         if (template.getEndDate() != null
                 && today.isAfter(template.getEndDate())) {
+            log.info("Template {} ignorado: endDate já passou", template.getId());
             return false;
         }
 
+        log.info("Template {} aprovado para processamento", template.getId());
         return true;
     }
 

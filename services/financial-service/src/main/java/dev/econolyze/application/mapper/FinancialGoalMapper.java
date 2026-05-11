@@ -5,7 +5,7 @@ import dev.econolyze.application.dto.response.FinancialGoalResponse;
 import dev.econolyze.domain.entity.FinancialGoal;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi")
+@Mapper(config = QuarkusMapperConfig.class)
 public interface FinancialGoalMapper {
     FinancialGoalDTO mapToDTO(FinancialGoal financialGoal);
     FinancialGoalDTO mapToDTO(FinancialGoalResponse financialGoalResponse);

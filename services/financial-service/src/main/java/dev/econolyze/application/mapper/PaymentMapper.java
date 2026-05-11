@@ -7,7 +7,7 @@ import dev.econolyze.domain.entity.Payment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "cdi")
+@Mapper(config = QuarkusMapperConfig.class)
 public interface PaymentMapper {
     @Mapping(target = "paidAt", source = "paidAt")
     @Mapping(target = "status", source = "status")

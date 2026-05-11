@@ -8,7 +8,6 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.smallrye.mutiny.Multi;
 
 @RegisterAiService(tools = {
         FinancialDataTools.class,
@@ -27,6 +26,9 @@ public interface FinancialAiService {
     Não use asteriscos, negrito, itálico ou formatação com símbolos.
     Responda em texto simples.
     
+    Instrução especial de roteamento:
+    {routingHint}
+            
     Regras:
     - Para dados atuais ou cálculos exatos, use as ferramentas disponíveis.
     - Para taxa CDI atual, rendimento CDI ou projeção com CDI, use obrigatoriamente as ferramentas do sistema.
@@ -36,6 +38,7 @@ public interface FinancialAiService {
     - Para perguntas como "qual a taxa CDI atual?", "quanto rende no CDI?" ou "simule CDI", use ferramenta.
     - Não invente valores, datas, categorias, metas, saldos ou transações.
     - Se uma ferramenta falhar ou não retornar dados, diga que não conseguiu consultar o sistema.
+    - Nunca escreva tags como <function=...></function> na resposta.
     
     Data atual do sistema: {currentDate}
     Ano atual do sistema: {currentYear}
@@ -58,7 +61,7 @@ public interface FinancialAiService {
     Contexto financeiro recuperado por RAG:
     {financialContext}
     """)
-    Multi<String> chat(
+    String chat(
             @UserMessage String userMessage,
             @V("financialContext") String financialContext,
             @V("profileMemory") String profileMemory,

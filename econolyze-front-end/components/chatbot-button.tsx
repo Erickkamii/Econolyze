@@ -20,19 +20,14 @@ const TEXTAREA_LINE_HEIGHT = 20
 const TEXTAREA_VERTICAL_PADDING = 16
 const TEXTAREA_MAX_HEIGHT = TEXTAREA_LINE_HEIGHT * 3 + TEXTAREA_VERTICAL_PADDING
 
+const TOOL_CALL_PATTERN = /<function=[^>]*>[\s\S]*?<\/function>/g
+
 function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function appendStreamChunk(current: string, chunk: string) {
-  if (!current) return chunk
-  if (!chunk) return current
-
-  const last = current.at(-1) ?? ""
-  const first = chunk.at(0) ?? ""
-  const needsSpace = /\p{L}|\p{N}/u.test(last) && /\p{L}|\p{N}/u.test(first)
-
-  return `${current}${needsSpace ? " " : ""}${chunk}`
+function removeToolCalls(value: string) {
+  return value.replace(TOOL_CALL_PATTERN, "")
 }
 
 export function ChatbotButton() {
@@ -87,19 +82,18 @@ export function ChatbotButton() {
     ])
 
     try {
-      await ChatService.stream({
+      const answer = await ChatService.chat({
         message: content,
         signal: controller.signal,
-        onChunk: (chunk) => {
-          setMessages((current) =>
-            current.map((item) =>
-              item.id === assistantId
-                ? { ...item, content: appendStreamChunk(item.content, chunk) }
-                : item,
-            ),
-          )
-        },
       })
+
+      setMessages((current) =>
+        current.map((item) =>
+          item.id === assistantId
+            ? { ...item, content: answer }
+            : item,
+        ),
+      )
     } catch (error: any) {
       if (error?.name !== "AbortError") {
         toast.error(error.message ?? "Erro ao conversar com o assistente")
@@ -151,8 +145,8 @@ export function ChatbotButton() {
                       : "mr-auto border-border/70 bg-secondary/80 text-foreground",
                   )}
                 >
-                  {item.content ? (
-                    <p className="whitespace-pre-wrap break-words">{item.content}</p>
+                  {removeToolCalls(item.content) ? (
+                    <p className="whitespace-pre-wrap break-words">{removeToolCalls(item.content)}</p>
                   ) : (
                     <p className="text-muted-foreground">Pensando...</p>
                   )}
