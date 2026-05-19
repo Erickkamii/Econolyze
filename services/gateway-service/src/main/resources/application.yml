@@ -14,6 +14,7 @@ quarkus:
       access-control-allow-credentials: true
       access-control-max-age: 24H
     ssl:
+      native: true
       certificate:
         file: /work/ssl/cert.pem
         key-file: /work/ssl/key.pem
