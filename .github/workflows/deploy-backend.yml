@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'services/**'
-  workflow_dispatch: 
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -18,6 +18,7 @@ jobs:
       packages: write
 
     strategy:
+      fail-fast: false 
       matrix:
         service: [auth-service, gateway-service, financial-service, ai-service]
 
@@ -26,11 +27,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 21 (GraalVM)
-        uses: graalvm/setup-graalvm@v1
+        uses: actions/setup-java@v4 
         with:
           java-version: '21'
           distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
 
       - name: Log in to the Container Registry
@@ -45,8 +45,12 @@ jobs:
           cd services/${{ matrix.service }}
           chmod +x mvnw
           
-          # Compilação direta no host (sem contentor), poupando RAM e limitando a 4GB
-          ./mvnw package -Dnative -Dquarkus.native.native-image-xmx=4g -DskipTests
+          # Baixamos para 3g para garantir que não vai estourar os 7GB do GitHub
+          ./mvnw package -Dnative -Dquarkus.native.native-image-xmx=3g -DskipTests
+          
+          # Lista os arquivos gerados para debug caso o Docker falhe de novo
+          echo "==== CONTEÚDO DA PASTA TARGET ===="
+          ls -lh target/
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
@@ -82,11 +86,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/econolyze
-            
             echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-
             podman compose pull
-            
             podman compose up -d
-            
             podman image prune -f
