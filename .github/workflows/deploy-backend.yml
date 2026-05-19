@@ -28,7 +28,7 @@ jobs:
             dockerfile: Dockerfile.native
           - service: financial-service
             native: false
-            dockerfile: Dockerfile.native
+            dockerfile: Dockerfile.jvm
           - service: ai-service
             native: false
             dockerfile: Dockerfile.jvm
