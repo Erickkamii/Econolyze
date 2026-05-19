@@ -22,12 +22,12 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
-        boolean isLocal = isLocalEnvironment(ctx);
+        
         if ("OPTIONS".equals(ctx.getMethod())) {
             return;
         }
-
         injectAuthFromCookie(ctx);
+        boolean isLocal = isLocalEnvironment(ctx);
 
         if (isLocal) return;
 
