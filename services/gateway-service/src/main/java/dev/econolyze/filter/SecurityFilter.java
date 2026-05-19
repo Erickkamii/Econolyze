@@ -26,6 +26,11 @@ public class SecurityFilter implements ContainerRequestFilter {
         if ("OPTIONS".equals(ctx.getMethod())) {
             return;
         }
+       ctx.getHeaders().add("Access-Control-Allow-Origin", "https://econolyze.vercel.app");
+       ctx.getHeaders().add("Access-Control-Allow-Credentials", "true");
+       ctx.getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+       ctx.getHeaders().add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+
         injectAuthFromCookie(ctx);
         boolean isLocal = isLocalEnvironment(ctx);
 
