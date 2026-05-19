@@ -2,13 +2,13 @@ name: Deploy Back-End (Quarkus Native)
 
 on:
   push:
-    branches: [ "main" ] # Dispara o deploy sempre que você der push na main
+    branches: [ "main" ]
     paths:
-      - 'services/**' # Só dispara se houver alterações no back-end
+      - 'services/**'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }} # Vai resolver automaticamente para Erickkamii/Econolyze (ou o nome do seu repositório)
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -43,8 +43,12 @@ jobs:
       - name: Build Native Image with Maven
         run: |
           cd services/${{ matrix.service }}
-          # Compila o binário nativo usando o container de build do Quarkus
-          ./mvnw package -Dnative -Dquarkus.native.container-build=true -DskipTests
+          
+          # 1. Garante que o script do Maven tem permissão de execução
+          chmod +x mvnw
+          
+          # 2. Compila o binário nativo limitando a memória do GraalVM (Xmx) para não estourar o limite do GitHub
+          ./mvnw package -Dnative -Dquarkus.native.container-build=true -Dquarkus.native.native-image-xmx=5g -DskipTests
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
