@@ -7,7 +7,7 @@ quarkus:
     port: 8080
     cors:
       ~: true
-      origins: "http://localhost:5173,http://localhost:3000,http://192.168.3.32:3000,http://192.168.3.9:3000"
+      origins: "http://localhost:5173,http://localhost:3000,http://192.168.3.32:3000,http://192.168.3.9:3000,https://econolyze.vercel.app/"
       methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
       headers: "accept,authorization,content-type,x-requested-with,x-xsrf-token"
       exposed-headers: "Content-Disposition"
