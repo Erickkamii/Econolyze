@@ -56,11 +56,8 @@ jobs:
         run: |
           cd services/${{ matrix.service }}
           chmod +x mvnw
-          ./mvnw package -Pnative \
-            -Dquarkus.native.container-build=true \
-            -Dquarkus.native.container-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21 \
-            -Dquarkus.native.native-image-xmx=4g \
-            -DskipTests
+          # Removemos o container-build e rodamos direto no host do GitHub
+          ./mvnw package -Pnative -Dquarkus.native.native-image-xmx=4g -DskipTests
           echo "==== CONTEÚDO DA PASTA TARGET ===="
           ls -lh target/
 
