@@ -1,0 +1,92 @@
+name: Deploy Back-End (Quarkus Native)
+
+on:
+  push:
+    branches: [ "main" ] # Dispara o deploy sempre que você der push na main
+    paths:
+      - 'services/**' # Só dispara se houver alterações no back-end
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }} # Vai resolver automaticamente para Erickkamii/Econolyze (ou o nome do seu repositório)
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [auth-service, gateway-service, financial-service, ai-service]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (GraalVM)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Log in to the Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Native Image with Maven
+        run: |
+          cd services/${{ matrix.service }}
+          # Compila o binário nativo usando o container de build do Quarkus
+          ./mvnw package -Dnative -Dquarkus.native.container-build=true -DskipTests
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          # Força o arquivo Dockerfile.native do Quarkus
+          file: ./services/${{ matrix.service }}/src/main/docker/Dockerfile.native
+          push: true
+          # Transforma o nome do repositório em minúsculo para o GHCR não rejeitar
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy compose.yaml to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "services/compose.yaml"
+          target: "/opt/econolyze"
+          strip_components: 1
+
+      - name: Executing remote ssh commands to deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/econolyze
+            
+            echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            podman compose pull
+            
+            podman compose up -d
+            
+            podman image prune -f

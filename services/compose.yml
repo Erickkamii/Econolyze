@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  gateway-service:
+    image: ghcr.io/erickkamii/gateway-service:latest
+    container_name: gateway-service
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - /opt/econolyze/.env
+    networks:
+      - econolyze-net
+    depends_on:
+      - auth-service
+      - financial-service
+      - ai-service
+
+  auth-service:
+    image: ghcr.io/erickkamii/auth-service:latest
+    container_name: auth-service
+    restart: unless-stopped
+    env_file:
+      - /opt/econolyze/.env
+    volumes:
+      - /opt/econolyze/keys:/work/keys:ro
+    networks:
+      - econolyze-net
+
+  financial-service:
+    image: ghcr.io/erickkamii/financial-service:latest
+    container_name: financial-service
+    restart: unless-stopped
+    env_file:
+      - /opt/econolyze/.env
+    volumes:
+      - /opt/econolyze/keys:/work/keys:ro
+    networks:
+      - econolyze-net
+
+  ai-service:
+    image: ghcr.io/erickkamii/ai-service:latest
+    container_name: ai-service
+    restart: unless-stopped
+    env_file:
+      - /opt/econolyze/.env
+    environment:
+      - QUARKUS_REST_CLIENT_FINANCIAL_SERVICE_URL=http://financial-service:8082
+    volumes:
+      - /opt/econolyze/keys:/work/keys:ro
+    networks:
+      - econolyze-net
+
+networks:
+  econolyze-net:
+    driver: bridge

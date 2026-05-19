@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(schema = "auth", name = "revoked_tokens")
+@Table(schema = "authentication", name = "revoked_tokens")
 @AllArgsConstructor
 @NoArgsConstructor
 public class RevokedToken {

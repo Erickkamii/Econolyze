@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(schema = "auth", name = "users")
+@Table(schema = "authentication", name = "users")
 @UserDefinition
 @Getter
 @Setter
