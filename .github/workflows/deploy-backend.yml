@@ -1,8 +1,8 @@
-name: Deploy Back-End (Quarkus Native)
+name: Deploy Back-End (Quarkus)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - 'services/**'
   workflow_dispatch:
@@ -16,21 +16,32 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     strategy:
-      fail-fast: false 
+      fail-fast: false
       matrix:
-        service: [auth-service, gateway-service, financial-service, ai-service]
+        include:
+          - service: auth-service
+            native: true
+            dockerfile: Dockerfile.native
+          - service: gateway-service
+            native: true
+            dockerfile: Dockerfile.native
+          - service: financial-service
+            native: true
+            dockerfile: Dockerfile.native
+          - service: ai-service
+            native: false
+            dockerfile: Dockerfile.jvm
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 (GraalVM)
-        uses: actions/setup-java@v4 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'graalvm'
+          distribution: 'temurin'
           cache: 'maven'
 
       - name: Log in to the Container Registry
@@ -40,15 +51,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Native Image with Maven
+      - name: Build Native Image (native services)
+        if: matrix.native == true
         run: |
           cd services/${{ matrix.service }}
           chmod +x mvnw
-          
-          # Baixamos para 3g para garantir que não vai estourar os 7GB do GitHub
-          ./mvnw package -Dnative -Dquarkus.native.native-image-xmx=3g -DskipTests
-          
-          # Lista os arquivos gerados para debug caso o Docker falhe de novo
+          ./mvnw package -Pnative \
+            -Dquarkus.native.container-build=true \
+            -Dquarkus.native.container-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21 \
+            -Dquarkus.native.native-image-xmx=4g \
+            -DskipTests
+          echo "==== CONTEÚDO DA PASTA TARGET ===="
+          ls -lh target/
+
+      - name: Build JVM JAR (JVM services)
+        if: matrix.native == false
+        run: |
+          cd services/${{ matrix.service }}
+          chmod +x mvnw
+          ./mvnw package -DskipTests
           echo "==== CONTEÚDO DA PASTA TARGET ===="
           ls -lh target/
 
@@ -56,10 +77,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./services/${{ matrix.service }}
-          file: ./services/${{ matrix.service }}/src/main/docker/Dockerfile.native
+          file: ./services/${{ matrix.service }}/src/main/docker/${{ matrix.dockerfile }}
           push: true
           tags: |
             ghcr.io/erickkamii/${{ matrix.service }}:latest
+            ghcr.io/erickkamii/${{ matrix.service }}:${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -78,7 +100,7 @@ jobs:
           target: "/opt/econolyze"
           strip_components: 1
 
-      - name: Executing remote ssh commands to deploy
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
