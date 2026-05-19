@@ -5,11 +5,10 @@ on:
     branches: [ "main" ]
     paths:
       - 'services/**'
-  workflow_dispatch:
-  
+  workflow_dispatch: 
+
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -44,23 +43,19 @@ jobs:
       - name: Build Native Image with Maven
         run: |
           cd services/${{ matrix.service }}
-          
-          # 1. Garante que o script do Maven tem permissão de execução
           chmod +x mvnw
           
-          # 2. Compila o binário nativo limitando a memória do GraalVM (Xmx) para não estourar o limite do GitHub
-          ./mvnw package -Dnative -Dquarkus.native.container-build=true -Dquarkus.native.native-image-xmx=5g -DskipTests
+          # Compilação direta no host (sem contentor), poupando RAM e limitando a 4GB
+          ./mvnw package -Dnative -Dquarkus.native.native-image-xmx=4g -DskipTests
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./services/${{ matrix.service }}
-          # Força o arquivo Dockerfile.native do Quarkus
           file: ./services/${{ matrix.service }}/src/main/docker/Dockerfile.native
           push: true
-          # Transforma o nome do repositório em minúsculo para o GHCR não rejeitar
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:latest
+            ghcr.io/erickkamii/${{ matrix.service }}:latest
 
   deploy:
     needs: build-and-push
