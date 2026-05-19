@@ -161,6 +161,7 @@
             <properties>
                 <skipITs>false</skipITs>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
+                <quarkus.ssl.native>true</quarkus.ssl.native>
             </properties>
         </profile>
     </profiles>
