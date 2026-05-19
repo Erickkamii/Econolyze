@@ -2,6 +2,9 @@ quarkus:
   application:
     name: gateway-service
 
+  ssl:
+    native: true
+
   http:
     host: 0.0.0.0
     port: 8080
@@ -14,7 +17,6 @@ quarkus:
       access-control-allow-credentials: true
       access-control-max-age: 24H
     ssl:
-      native: true
       certificate:
         file: /work/ssl/cert.pem
         key-file: /work/ssl/key.pem
