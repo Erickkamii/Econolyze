@@ -4,6 +4,7 @@ import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -39,6 +40,10 @@ public class SecurityFilter implements ContainerRequestFilter {
         if (MUTATING_METHODS.contains(ctx.getMethod())) {
             String path = ctx.getUriInfo().getPath();
             if (path.contains("api/auth") || path.contains("swagger-ui") || path.contains("openapi")) {
+                return;
+            }
+            String authHeader = ctx.getHeaderString(HttpHeaders.AUTHORIZATION);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 return;
             }
             validateCsrf(ctx);
