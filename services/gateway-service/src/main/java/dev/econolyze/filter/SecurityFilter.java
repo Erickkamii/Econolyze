@@ -38,8 +38,9 @@ public class SecurityFilter implements ContainerRequestFilter {
 
         if (MUTATING_METHODS.contains(ctx.getMethod())) {
             String path = ctx.getUriInfo().getPath();
-            if (path.startsWith("api/auth")) return;
-
+            if (path.contains("api/auth") || path.contains("swagger-ui") || path.contains("openapi")) {
+                return;
+            }
             validateCsrf(ctx);
         }
     }

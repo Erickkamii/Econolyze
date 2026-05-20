@@ -2,17 +2,28 @@ quarkus:
   application:
     name: gateway-service
 
+  ssl:
+    native: true
+
   http:
     host: 0.0.0.0
     port: 8080
+
+    auth:
+      permission:
+        public-routes:
+          paths: "/api/auth/*,/swagger-ui/*,/q/openapi/*"
+          policy: permit
+
     cors:
       enabled: true
       origins: "http://localhost:5173,http://localhost:3000,http://192.168.3.32:3000,http://192.168.3.9:3000,https://econolyze.vercel.app,https://api.erickkami.dev"
       methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
       headers: "accept,authorization,content-type,x-requested-with,x-xsrf-token,cookie"
-      exposed-headers: "Content-Disposition"
+      exposed-headers: "*" # Liberado como estava no properties
       access-control-allow-credentials: true
       access-control-max-age: 24H
+
     ssl:
       certificate:
         file: /work/ssl/cert.pem
