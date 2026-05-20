@@ -48,14 +48,14 @@ quarkus:
   # REST Clients
   rest-client:
     auth-service:
-      url: http://localhost:8081
+      url: ${AUTH_SERVICE_URL:http://auth-service:8081}
       scope: jakarta.inject.Singleton
     financial-service:
-      url: http://localhost:8082
+      url: ${FINANCIAL_SERVICE_URL:http://financial-service:8082}
       scope: jakarta.inject.Singleton
     ai-service:
       read-timeout: 120000
-      url: http://localhost:8083
+      url: ${AI_SERVICE_URL:http://ai-service:8083}
       scope: jakarta.inject.Singleton
 
 mp:
