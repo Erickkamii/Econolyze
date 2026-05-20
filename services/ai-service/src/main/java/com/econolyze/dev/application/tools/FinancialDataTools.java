@@ -136,9 +136,19 @@ public class FinancialDataTools {
     }
 
     @Tool("Lista as transações recentes do usuário")
-    public String getRecentTransactions(Integer limit){
-//        return transactionClient.get
-        return "Em progresso";
+    public String getRecentTransactions(String limitStr) {
+        int limit = 10; // Fallback seguro
+        if (limitStr != null && !limitStr.isBlank()) {
+            try {
+                limit = Integer.parseInt(limitStr.replace("\"", "").trim());
+            } catch (NumberFormatException e) {
+                // Se a IA mandar lixo, mantém o padrão 10
+            }
+        }
+
+        // Quando for descomentar o seu client, use a variável 'limit' convertida:
+        // return transactionClient.getRecent(limit, userContext.getToken())...
+        return "Em progresso com limite de: " + limit;
     }
 
 
@@ -177,8 +187,17 @@ public class FinancialDataTools {
     Simula uma projeção de investimento baseada na taxa CDI oficial do sistema Econolyze.
     Use esta ferramenta quando o usuário informar valor e prazo para simular rendimento no CDI.
     """)
-    public String simulateInvestmentProjection(BigDecimal amount, Integer months){
-        return goalClient.simulateProjection(new InvestmentProjectionRequest(amount, months), userContext.getToken()).map(t -> t.getEntity().toString()).await().indefinitely();
+    public String simulateInvestmentProjection(BigDecimal amount, String monthsStr) {
+        int months = 12;
+        if (monthsStr != null && !monthsStr.isBlank()) {
+            try {
+                months = Integer.parseInt(monthsStr.replace("\"", "").trim());
+            } catch (NumberFormatException e) {
+            }
+        }
+        return goalClient.simulateProjection(new InvestmentProjectionRequest(amount, months), userContext.getToken())
+                .map(t -> t.getEntity().toString())
+                .await().indefinitely();
     }
 
     @Tool("Busca as metas ativas do usuário")
