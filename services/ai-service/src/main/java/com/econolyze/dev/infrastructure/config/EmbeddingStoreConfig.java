@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 @ApplicationScoped
@@ -34,6 +35,9 @@ public class EmbeddingStoreConfig {
 
     @Inject
     EmbeddingModel embeddingModel;
+
+    @Inject
+    DataSource dataSource;
 
     private MetadataStorageConfig metadataConfig() {
         return new MetadataStorageConfig() {
@@ -87,7 +91,7 @@ public class EmbeddingStoreConfig {
                 .database(database)
                 .user(user)
                 .password(password)
-                .table(table)
+                .table("ai."+table)
                 .dimension(embeddingModel.dimension())
                 .createTable(true)
                 .metadataStorageConfig(metadataConfig())
