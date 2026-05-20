@@ -290,13 +290,13 @@ export function TransacaoForm({
                     </FormGrid>
 
                     <div className="space-y-4 pt-2 w-full">
-                        <div className="flex items-center justify-between w-full">
-                            <Label className="cursor-pointer">Tornar Recorrente</Label>
+                        {/* <div className="flex items-center justify-between w-full"> */}
+                            {/* <Label className="cursor-pointer">Tornar Recorrente</Label>
                             <Switch
                                 checked={recorrente}
                                 onCheckedChange={setRecorrente}
                             />
-                        </div>
+                        </div> */}
 
                         <div className="flex items-center justify-between w-full">
                             <div>
