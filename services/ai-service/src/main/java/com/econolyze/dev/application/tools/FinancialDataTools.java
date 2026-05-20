@@ -135,21 +135,21 @@ public class FinancialDataTools {
         }
     }
 
-    @Tool("Lista as transações recentes do usuário")
-    public String getRecentTransactions(String limitStr) {
-        int limit = 10; // Fallback seguro
-        if (limitStr != null && !limitStr.isBlank()) {
-            try {
-                limit = Integer.parseInt(limitStr.replace("\"", "").trim());
-            } catch (NumberFormatException e) {
-                // Se a IA mandar lixo, mantém o padrão 10
-            }
-        }
-
-        // Quando for descomentar o seu client, use a variável 'limit' convertida:
-        // return transactionClient.getRecent(limit, userContext.getToken())...
-        return "Em progresso com limite de: " + limit;
-    }
+//    @Tool("Lista as transações recentes do usuário")
+//    public String getRecentTransactions(String limitStr) {
+//        int limit = 10; // Fallback seguro
+//        if (limitStr != null && !limitStr.isBlank()) {
+//            try {
+//                limit = Integer.parseInt(limitStr.replace("\"", "").trim());
+//            } catch (NumberFormatException e) {
+//                // Se a IA mandar lixo, mantém o padrão 10
+//            }
+//        }
+//
+//        // Quando for descomentar o seu client, use a variável 'limit' convertida:
+//        // return transactionClient.getRecent(limit, userContext.getToken())...
+//        return "Em progresso com limite de: " + limit;
+//    }
 
 
     @Tool("""
